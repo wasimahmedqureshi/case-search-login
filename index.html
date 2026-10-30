@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>निवाई केस खोज</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky search bar on top, filter chips, result list with expandable full-detail rows */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --ink:#1b2333; --muted:#5d6678; --line:#dde1ea;
+  --accent:#1e4f8a; --accent-ink:#ffffff; --accent-soft:#e3ecf8;
+  --warn:#9a5b00; --warn-soft:#fdf0d8; --ok:#17695a; --ok-soft:#dff3ee; --mark:#ffe58a;
+  --sans:'Noto Sans Devanagari',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161f; --surface:#1b212d; --ink:#e8ecf4; --muted:#9aa4b8; --line:#2c3444;
+  --accent:#6ea6ee; --accent-ink:#0c1524; --accent-soft:#1e2d45;
+  --warn:#f0b455; --warn-soft:#3a2d12; --ok:#6fd1bb; --ok-soft:#133a33; --mark:#6b5a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161f; --surface:#1b212d; --ink:#e8ecf4; --muted:#9aa4b8; --line:#2c3444;
+  --accent:#6ea6ee; --accent-ink:#0c1524; --accent-soft:#1e2d45;
+  --warn:#f0b455; --warn-soft:#3a2d12; --ok:#6fd1bb; --ok-soft:#133a33; --mark:#6b5a12; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:900px;margin:0 auto}
+header{padding-top:20px}
+h1{font-size:1.35rem;margin:0;font-weight:700;text-wrap:balance}
+.sub{color:var(--muted);font-size:.85rem;margin-top:2px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.sbox{display:flex;gap:8px}
+input[type=search]{flex:1;min-width:0;font:inherit;font-size:1rem;padding:12px 14px;border:1.5px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+input[type=search]:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.chip,select{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer}
+select{border-radius:6px;padding:5px 8px}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.count{color:var(--muted);font-size:.85rem;margin:6px 0 10px}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.row>summary{list-style:none;cursor:pointer;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+.row>summary::-webkit-details-marker{display:none}
+.no{font-family:var(--mono);font-size:.9rem;font-weight:500;overflow-wrap:anywhere}
+.parties{grid-column:1;font-weight:600;overflow-wrap:anywhere}
+.parties span{color:var(--muted);font-weight:400}
+.meta{grid-column:1;color:var(--muted);font-size:.82rem;display:flex;flex-wrap:wrap;gap:4px 14px}
+.side{grid-row:1/4;grid-column:2;text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end;font-size:.8rem}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.75rem;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.dis{background:var(--ok-soft);color:var(--ok)} .pill.late{background:var(--warn-soft);color:var(--warn)} .pill.up{background:var(--ok-soft);color:var(--ok)}
+.hd{font-family:var(--mono);white-space:nowrap}
+mark{background:var(--mark);color:inherit;border-radius:2px}
+.det{border-top:1px solid var(--line);padding:12px 14px 14px}
+dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px 18px;margin:0}
+dl div{min-width:0} dt{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+dd{margin:0;overflow-wrap:anywhere}
+.mono{font-family:var(--mono);font-size:.9rem}
+.act{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+button.b{font:inherit;font-size:.85rem;padding:5px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;cursor:pointer}
+button.b.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.more{margin:14px auto;display:block}
+.empty{padding:40px 10px;text-align:center;color:var(--muted)}
+footer{color:var(--muted);font-size:.78rem;margin-top:24px}
+@media (max-width:520px){.row>summary{grid-template-columns:1fr}.side{grid-row:auto;grid-column:1;flex-direction:row;flex-wrap:wrap;text-align:left;align-items:center}}
+
+.lcard{max-width:420px;margin:60px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.lcard h2{margin:0;font-size:1.15rem}.lp{margin:0;color:var(--muted);font-size:.9rem}
+#lf{display:flex;flex-direction:column;gap:10px}
+#lf input{font:inherit;padding:11px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
+#lf input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.lor{text-align:center;color:var(--muted);font-size:.8rem}
+.lmsg{margin:0;font-size:.88rem;color:var(--warn);min-height:1.2em}
+button.b:disabled{opacity:.6}
+.who{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--muted);font-size:.85rem;margin-top:2px}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="fb.js"></script></head><body>
+<div id="login"></div>
+<div class="wrap" id="app" hidden>
+<header><h1>निवाई केस खोज · Case Search</h1>
+<div class="sub">सहायक कलक्टर (फास्ट ट्रेक) निवाई, जिला टोंक · सूची दिनांक <span id="asof"></span></div>
+<div class="who"><span id="who"></span><button class="b" id="out" type="button">लॉग आउट</button></div></header>
+<div class="bar">
+ <div class="sbox"><input id="q" type="search" placeholder="प्रकरण संख्या (GCMS / RRCMS), अपीलार्थी या प्रतिपक्षी का नाम" autocomplete="off" aria-label="Search"></div>
+ <div class="chips" id="chips"></div>
+</div>
+<div class="count" id="count" aria-live="polite"></div>
+<div class="list" id="list"></div>
+<button class="b more" id="more" hidden>और दिखाएँ</button>
+<footer>खोज प्रकरण संख्या, अपीलार्थी, प्रतिपक्षी, ग्राम, खसरा, अधिवक्ता और धारा में होती है। यह जानकारी केवल सूचना हेतु है; आधिकारिक स्थिति के लिए RRCMS पोर्टल या न्यायालय देखें। सूची अंतिम बार अपडेट: <span id="built"></span>। यहाँ केवल वही प्रकरण दिखते हैं जिनमें आप अधिवक्ता हैं।</footer>
+</div>
+<script>
+let D=[],ASOF='';
+const $=id=>document.getElementById(id);
+const norm=s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+const compact=s=>(s||'').toLowerCase().replace(/[\s\/\-]/g,'');
+const fmt=d=>d?d.split('-').reverse().join('-'):'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let st={k:'सभी वर्ग',h:'सभी',y:'',sort:'hd',lim:50};
+const KS=['सभी वर्ग','दावे','प्रार्थना पत्र','इजराय'];
+const HS=['सभी','लम्बित','निस्तारित'];
+let years=[];
+function chips(){
+  $('chips').innerHTML=HS.map(k=>`<button class="chip" data-h="${k}" aria-pressed="${st.h===k}">${k}</button>`).join('')+
+  KS.map(k=>`<button class="chip" data-k="${k}" aria-pressed="${st.k===k}">${k}</button>`).join('')+
+  `<select id="y" aria-label="वर्ष"><option value="">सभी वर्ष</option>${years.map(y=>`<option ${st.y==y?'selected':''}>${y}</option>`).join('')}</select>`+
+  `<select id="s" aria-label="क्रम"><option value="hd" ${st.sort=='hd'?'selected':''}>पेशी / निर्णय तिथि</option><option value="no" ${st.sort=='no'?'selected':''}>प्रकरण संख्या</option><option value="old" ${st.sort=='old'?'selected':''}>सबसे पुराना पहले</option></select>`;
+}
+function hl(t,terms){t=esc(t||'');if(!terms.length)return t;
+  const re=new RegExp('('+terms.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');return t.replace(re,'<mark>$1</mark>');}
+const instKey=x=>(x.ir||x.ig||'9999-99-99');
+const sortDate=x=>x.s==='D'?(x.dd||'9'):(x.hd||'9');
+function run(){
+  const q=norm($('q').value),terms=q?q.split(' '):[],cq=compact($('q').value);
+  let r=D.filter(x=>{
+    if(st.h==='लम्बित'&&x.s!=='P')return false;
+    if(st.h==='निस्तारित'&&x.s!=='D')return false;
+    if(st.k!=='सभी वर्ग'&&x.k!==st.k)return false;
+    if(st.y&&x.iy!=st.y)return false;
+    if(!terms.length)return true;
+    return terms.every(t=>x.key.includes(t))||(cq.length>2&&x.ck.includes(cq));
+  });
+  r.sort((a,b)=>st.sort==='no'?a.n.localeCompare(b.n,'en',{numeric:true}):st.sort==='old'?instKey(a).localeCompare(instKey(b)):
+     (st.h==='निस्तारित'||(st.h==='सभी'&&terms.length&&0))?sortDate(b).localeCompare(sortDate(a)):
+     (a.s!==b.s?(a.s==='P'?-1:1):sortDate(a).localeCompare(sortDate(b))));
+  $('count').textContent=r.length+' प्रकरण मिले'+(r.length>st.lim?' (पहले '+st.lim+' दिख रहे हैं)':'');
+  $('list').innerHTML=r.length?r.slice(0,st.lim).map(x=>card(x,terms)).join(''):'<div class="empty">कोई प्रकरण नहीं मिला। वर्तनी बदलकर या फ़िल्टर हटाकर देखें। यदि प्रकरण हाल ही में निस्तारित हुआ है तो सूची अगले अपडेट में जुड़ेगी।</div>';
+  $('more').hidden=r.length<=st.lim;
+  if(r.length===1&&terms.length){const d=document.querySelector('#list details');if(d)d.open=true}
+}
+function age(a,b){ // months between ISO dates
+  if(!a||!b)return '';let m=(+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5,7)-+a.slice(5,7));if(+b.slice(8)<+a.slice(8))m--;
+  if(m<0)return '';const y=Math.floor(m/12),mm=m%12;return (y?y+' वर्ष ':'')+(mm||!y?mm+' माह':'')}
+function card(x,terms){
+  const P=x.s==='P',late=P&&x.hd&&x.hd<ASOF,days=late?Math.round((new Date(ASOF)-new Date(x.hd))/864e5):0;
+  const no=x.r&&x.g?x.r+' / '+x.g:x.n;
+  const ap=x.ap||(x.title||'—'),vs=x.rs?` <span>बनाम</span> ${hl(x.rs,terms)}`:'';
+  const side=P?`<span class="hd">${fmt(x.hd)}</span><span class="pill ${late?'late':'up'}">${late?days+' दिन पहले की तारीख':'आगामी पेशी'}</span>`
+    :`<span class="pill dis">निस्तारित</span><span class="hd">${fmt(x.dd)}</span>`;
+  const it=[['RRCMS प्रकरण संख्या',x.r,1],['GCMS प्रकरण संख्या',x.g,1],
+    ...(P?[['अगली पेशी',fmt(x.hd)]]:[['निर्णय दिनांक',fmt(x.dd)],['केस शीर्षिक',x.title]]),
+    ['संस्थापन दिनांक (RRCMS)',x.ir&&fmt(x.ir)],['संस्थापन दिनांक (GCMS)',x.ig&&fmt(x.ig)],
+    ...(!P&&inst(x)&&x.dd?[['निस्तारण में लगा समय',age(inst(x),x.dd)]]:[]),
+    ['अपीलार्थी / वादी',x.ap,0,1],['प्रतिपक्षी',x.rs,0,1],['अपीलार्थी के अधिवक्ता',x.aa,0,1],['प्रतिपक्षी के अधिवक्ता',x.ra,0,1],
+    ['प्रकरण का उद्देश्य',x.pur],['प्रकरण का प्रकार',x.ct],['MPR वर्ग',x.k],['अधिनियम',x.act],['धारा',x.sec],
+    ['तहसील',x.tehsil],['ग्राम',x.vil,0,1],['खसरा नं.',x.kh],['संभाग / जिला',x.dv&&x.dv+' / '+x.ds],['सम्बद्ध प्रकरण',x.cc,1]];
+  const dl=it.filter(i=>P||i[1]).map(i=>`<div><dt>${i[0]}</dt><dd${i[2]?' class="mono"':''}>${i[3]?hl(i[1]||'—',terms):esc(i[1]||'—')}</dd></div>`).join('');
+  return `<details class="row"><summary>
+   <div class="no">${hl(no,terms)}</div>
+   <div class="parties">${hl(ap,terms)}${vs}</div>
+   <div class="meta"><span>${esc(x.ct||x.k)}${x.ct?' · '+esc(x.k):''}</span><span>धारा ${hl(x.sec||'—',terms)}</span>${x.vil?`<span>${hl(x.vil,terms)}</span>`:''}</div>
+   <div class="side">${side}</div>
+  </summary><div class="det"><dl>${dl}</dl><div class="act"><button class="b" data-copy="${esc(x.n)}">प्रकरण संख्या कॉपी करें</button>${x.cc?`<button class="b p" data-go="${esc(x.cc)}">सम्बद्ध प्रकरण खोजें</button>`:''}</div></div></details>`;
+}
+function inst(x){return x.ir||x.ig}
+$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  if(b.dataset.k)st.k=b.dataset.k;if(b.dataset.h)st.h=b.dataset.h;st.lim=50;chips();run();});
+$('chips').addEventListener('change',e=>{if(e.target.id==='y')st.y=e.target.value;if(e.target.id==='s')st.sort=e.target.value;st.lim=50;run();});
+$('q').addEventListener('input',()=>{st.lim=50;run()});
+$('more').addEventListener('click',()=>{st.lim+=100;run()});
+$('list').addEventListener('click',e=>{
+  const c=e.target.closest('[data-copy]'),g=e.target.closest('[data-go]');
+  if(c){const t=c.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{c.textContent='कॉपी हो गया'}).catch(()=>{const s=document.createElement('span');s.textContent=' '+t;c.after(s);const r=document.createRange();r.selectNodeContents(s);getSelection().removeAllRanges();getSelection().addRange(r);c.textContent='चुना गया, कॉपी करें'})}
+  if(g){st.h='सभी';chips();$('q').value=g.dataset.go;window.scrollTo({top:0});run()}
+});
+
+const ldiv=$('login');
+async function load(user){
+  const em=(user.email||'').toLowerCase();
+  const a=await db.collection('cs_advocates').doc(em).get();
+  if(!a.exists||a.data().active===false){ldiv.hidden=false;mountLogin(ldiv,'पंजीकरण नहीं मिला','');ldiv.querySelector('#lf').hidden=true;ldiv.querySelector('.lor').hidden=true;ldiv.querySelector('#lgoogle').textContent='दूसरे ईमेल से लॉगिन';ldiv.querySelector('#lgoogle').onclick=()=>auth.signOut();ldiv.querySelector('#lmsg').textContent=em+' अधिवक्ता के रूप में पंजीकृत नहीं है। कृपया कार्यालय से संपर्क करें।';$('app').hidden=true;return}
+  const qs=await db.collection('cs_cases').where('owner','==',em).get();
+  let recs=[],asof='',built='';
+  qs.forEach(d=>{const v=d.data();recs=recs.concat(v.recs||[]);if((v.asof||'')>asof)asof=v.asof;if((v.built||'')>built)built=v.built});
+  ASOF=asof||new Date().toISOString().slice(0,10);D=recs;
+  D.forEach(x=>{x.key=norm([x.n,x.g,x.r,x.ap,x.rs,x.vil,x.kh,x.aa,x.ra,x.sec,x.cc,x.title].join(' '));x.ck=compact(x.g+' '+x.r);});
+  years=[...new Set(D.map(x=>x.iy).filter(Boolean))].sort((a,b)=>b-a);
+  const np=D.filter(x=>x.s==='P').length;
+  $('asof').textContent=fmt(asof);$('built').textContent=fmt(built);
+  $('who').textContent=(a.data().name||em)+' · '+np+' लम्बित · '+(D.length-np)+' निस्तारित';
+  ldiv.hidden=true;$('app').hidden=false;chips();run();
+}
+$('out').onclick=()=>auth.signOut();
+let started=false;
+auth.onAuthStateChanged(u=>{
+  if(u){load(u).catch(e=>{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'लॉगिन','');ldiv.querySelector('#lmsg').textContent=errText(e)})}
+  else{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','अपना पंजीकृत ईमेल लिखें। लॉगिन लिंक उसी ईमेल पर आएगा।')}
+});
+</script></body></html>

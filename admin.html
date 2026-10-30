@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>निवाई केस खोज · एडमिन</title>
+<style>
+:root{--bg:#f3f4f7;--surface:#fff;--ink:#1b2333;--muted:#5d6678;--line:#dde1ea;--accent:#1e4f8a;--accent-ink:#fff;--warn:#9a5b00;--ok:#17695a;--sans:'Noto Sans Devanagari',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161f;--surface:#1b212d;--ink:#e8ecf4;--muted:#9aa4b8;--line:#2c3444;--accent:#6ea6ee;--accent-ink:#0c1524;--warn:#f0b455;--ok:#6fd1bb;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161f;--surface:#1b212d;--ink:#e8ecf4;--muted:#9aa4b8;--line:#2c3444;--accent:#6ea6ee;--accent-ink:#0c1524;--warn:#f0b455;--ok:#6fd1bb;color-scheme:dark}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;margin:0;padding-block:16px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-size:1.3rem;margin:0}h2{font-size:1.05rem;margin:0 0 8px}p{margin:0 0 8px}.m{color:var(--muted);font-size:.85rem}
+section,.lcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.lcard{max-width:420px;margin:60px auto 0;display:flex;flex-direction:column;gap:12px}.lp{margin:0;color:var(--muted);font-size:.9rem}
+#lf{display:flex;flex-direction:column;gap:10px}.lor{text-align:center;color:var(--muted);font-size:.8rem}.lmsg{margin:0;font-size:.88rem;color:var(--warn)}
+input[type=text],input[type=email],input[type=date],textarea{font:inherit;width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
+textarea{min-height:70px;resize:vertical}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.b{font:inherit;font-size:.9rem;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;cursor:pointer}
+button.b.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}button.b:disabled{opacity:.55;cursor:default}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:3px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;font-size:.88rem}th{color:var(--muted);font-weight:500}
+.scroll{overflow-x:auto}
+#log{font-family:var(--mono);font-size:.8rem;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;max-height:260px;overflow:auto;min-height:60px}
+.names{display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow:auto}.nm{font-size:.8rem;padding:2px 9px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink);cursor:pointer}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="fb.js"></script><script src="core.js"></script></head><body>
+<div id="login"></div>
+<div class="wrap" id="app" hidden>
+ <div class="row" style="justify-content:space-between"><h1>एडमिन · निवाई केस खोज</h1><span class="m"><span id="me"></span> <button class="b" id="out">लॉग आउट</button></span></div>
+
+ <section><h2>1. नई सूची अपलोड करें</h2>
+  <p class="m">MPR की pending .xls फ़ाइल और update_disposal.xlsx चुनें। फ़ाइलें आपके ब्राउज़र में ही पढ़ी जाती हैं, कहीं अपलोड नहीं होतीं; केवल तैयार डेटा Firebase में जाता है।</p>
+  <div class="g"><div><label for="fp">Pending सूची (.xls)</label><input id="fp" type="file" accept=".xls,.html,.htm"></div>
+  <div><label for="fd">निस्तारण फ़ाइल (.xlsx)</label><input id="fd" type="file" accept=".xlsx,.xls"></div>
+  <div><label for="asof">सूची की तारीख</label><input id="asof" type="date"></div></div>
+  <div class="row" style="margin-top:12px"><button class="b p" id="pub">डेटा तैयार करके प्रकाशित करें</button><button class="b" id="repub">पिछला डेटा दोबारा प्रकाशित करें (अधिवक्ता बदलने पर)</button></div>
+ </section>
+
+ <section><h2>2. अधिवक्ता</h2>
+  <p class="m">अधिवक्ता तभी लॉगिन कर पाएगा जब उसका ईमेल यहाँ जुड़ा हो। "नाम की वर्तनी" में वे सभी नाम लिखें जैसे सूची में आते हैं (हर नाम नई लाइन में), जैसे <i>रामबाबू शर्मा</i> और <i>rambabu shrama</i>।</p>
+  <div class="g"><div><label for="ae">ईमेल</label><input id="ae" type="email" placeholder="advocate@gmail.com"></div>
+  <div><label for="an">नाम</label><input id="an" type="text" placeholder="रामबाबू शर्मा"></div>
+  <div><label for="am">मोबाइल (वैकल्पिक, केवल रिकॉर्ड के लिए)</label><input id="am" type="text" inputmode="numeric"></div></div>
+  <label for="aa" style="margin-top:10px">नाम की वर्तनी (हर नाम नई लाइन में)</label><textarea id="aa"></textarea>
+  <div class="row" style="margin-top:8px"><button class="b p" id="asave">अधिवक्ता सहेजें</button><span class="m" id="amsg"></span></div>
+  <p class="m" style="margin-top:12px">सूची में मिले अधिवक्ता नाम (बार-बार आने के क्रम में)। किसी नाम पर क्लिक करने से वह ऊपर की "वर्तनी" में जुड़ जाएगा:</p>
+  <div class="names" id="names"></div>
+  <div class="scroll" style="margin-top:12px"><table><thead><tr><th>ईमेल</th><th>नाम</th><th>मोबाइल</th><th>वर्तनी</th><th></th></tr></thead><tbody id="alist"></tbody></table></div>
+ </section>
+
+ <section><h2>3. हटाए जाने वाले प्रकरण</h2>
+  <p class="m">इन प्रकरण संख्याओं को किसी भी अधिवक्ता को नहीं दिखाया जाएगा। हर संख्या नई लाइन में (जैसे 2026/16)।</p>
+  <textarea id="ex" style="min-height:140px"></textarea>
+  <div class="row" style="margin-top:8px"><button class="b p" id="exsave">सूची सहेजें</button><span class="m" id="exmsg"></span></div>
+ </section>
+
+ <section><h2>4. एक बार का काम: पुराना इतिहास</h2>
+  <p class="m">पुराने प्रकरणों की जानकारी (ताकि निस्तारित होने पर पूरी details दिखें)। <b>history_seed.json</b> सिर्फ़ पहली बार चुनें। इसके बाद हर अपलोड में इतिहास अपने आप बढ़ता है। अभी इतिहास में: <b id="hcount">…</b> प्रकरण।</p>
+  <div class="row"><input id="fh" type="file" accept=".json"><button class="b" id="himp">इतिहास जोड़ें</button></div>
+ </section>
+
+ <section><h2>स्थिति</h2><div id="log" aria-live="polite"></div><div class="scroll" style="margin-top:10px"><table id="sum"></table></div></section>
+</div>
+<script>
+const ADMIN='wasimahmedqureshi@gmail.com',CH=150;
+const $=id=>document.getElementById(id);
+const log=t=>{const l=$('log');l.textContent+=t+'\n';l.scrollTop=l.scrollHeight};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let HIST=new Map(),EX=new Set(),ADV=[];
+const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
+async function writeChunks(col,prefix,recs,extra){ // replace all docs col/prefix__N
+  const old=await db.collection(col).where(firebase.firestore.FieldPath.documentId(),'>=',prefix+'__').where(firebase.firestore.FieldPath.documentId(),'<',prefix+'__').get();
+  const parts=chunk(recs,CH);const keep=new Set(parts.map((_,i)=>prefix+'__'+i));
+  const b=db.batch();parts.forEach((p,i)=>b.set(db.collection(col).doc(prefix+'__'+i),{...extra,idx:i,recs:p}));
+  old.forEach(d=>{if(!keep.has(d.id))b.delete(d.ref)});await b.commit();return parts.length}
+async function readChunks(col,prefix){const s=await db.collection(col).where(firebase.firestore.FieldPath.documentId(),'>=',prefix+'__').where(firebase.firestore.FieldPath.documentId(),'<',prefix+'__').get();
+  const a=[];s.forEach(d=>a.push(d.data()));a.sort((x,y)=>x.idx-y.idx);return a.flatMap(x=>x.recs)}
+async function loadHist(){const recs=await readChunks('cs_history','h');HIST=new Map();for(const x of recs)for(const k of new Set([x.n,x.g,x.r]))if(k)HIST.set(k,x);$('hcount').textContent=Core.uniq(HIST).length;renderNames()}
+async function saveHist(){const u=Core.uniq(HIST);await writeChunks('cs_history','h',u,{});$('hcount').textContent=u.length}
+async function loadEx(){const d=await db.collection('cs_admin').doc('excluded').get();EX=new Set(d.exists?d.data().list:[]);$('ex').value=[...EX].join('\n')}
+function renderNames(){const el=$('names');el.innerHTML='';for(const [n,c] of Core.advocateNames(Core.uniq(HIST)).slice(0,150)){const b=document.createElement('button');b.type='button';b.className='nm';b.textContent=n+' ('+c+')';b.onclick=()=>{const t=$('aa');t.value=(t.value.trim()?t.value.trim()+'\n':'')+n};el.appendChild(b)}}
+async function loadAdv(){const s=await db.collection('cs_advocates').get();ADV=[];s.forEach(d=>ADV.push({id:d.id,...d.data()}));ADV.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const tb=$('alist');tb.innerHTML='';for(const a of ADV){const tr=document.createElement('tr');
+    const cells=[a.id,a.name||'',a.mobile||'',(a.aliases||[]).join(', ')];cells.forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td)});
+    const td=document.createElement('td');const e=document.createElement('button');e.className='b';e.textContent='बदलें';e.onclick=()=>{$('ae').value=a.id;$('an').value=a.name||'';$('am').value=a.mobile||'';$('aa').value=(a.aliases||[]).join('\n');window.scrollTo({top:$('ae').offsetTop-80,behavior:'smooth'})};
+    const d=document.createElement('button');d.className='b';d.textContent='हटाएँ';d.style.marginLeft='6px';d.onclick=async()=>{if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='पक्का हटाएँ?';return}
+      await removeAdv(a.id);loadAdv()};td.append(e,d);tr.appendChild(td);tb.appendChild(tr)}}
+async function removeAdv(id){const s=await db.collection('cs_cases').where('owner','==',id).get();const b=db.batch();s.forEach(x=>b.delete(x.ref));b.delete(db.collection('cs_advocates').doc(id));await b.commit();log('हटाया: '+id)}
+$('asave').onclick=async()=>{const id=$('ae').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(id)){$('amsg').textContent='सही ईमेल लिखें';return}
+  const al=$('aa').value.split('\n').map(x=>x.trim()).filter(Boolean);if($('an').value.trim()&&!al.includes($('an').value.trim()))al.push($('an').value.trim());
+  await db.collection('cs_advocates').doc(id).set({name:$('an').value.trim(),mobile:$('am').value.trim(),aliases:al,active:true});
+  $('amsg').textContent='सहेजा गया। अब "पिछला डेटा दोबारा प्रकाशित करें" दबाएँ।';['ae','an','am','aa'].forEach(i=>$(i).value='');loadAdv()};
+$('exsave').onclick=async()=>{const l=$('ex').value.split('\n').map(x=>x.trim()).filter(x=>x&&!/^gcms$/i.test(x));EX=new Set(l);await db.collection('cs_admin').doc('excluded').set({list:l});$('exmsg').textContent=l.length+' प्रकरण सहेजे गए।'};
+$('himp').onclick=async()=>{const f=$('fh').files[0];if(!f)return log('history_seed.json चुनें');const j=JSON.parse(await f.text());const m=new Map();
+  for(const k in j){const x=j[k];if(Core.inEx(x,EX))continue;for(const kk of new Set([x.n,x.g,x.r]))if(kk&&!HIST.has(kk))HIST.set(kk,x)}
+  await saveHist();renderNames();log('इतिहास जुड़ गया।')};
+function fileName(f){const m=/(\d{2})-(\d{2})-(\d{4})\.xls/.exec(f.name);return m?`${m[3]}-${m[2]}-${m[1]}`:''}
+$('fp').onchange=()=>{const f=$('fp').files[0];if(f&&fileName(f))$('asof').value=fileName(f)};
+async function publish(P,Dd,asof){
+  log('अधिवक्ता के अनुसार बाँट रहे हैं…');const all=P.concat(Dd);const built=new Date().toISOString().slice(0,10);let n=0;const rows=[];
+  for(const a of ADV){if(a.active===false)continue;const recs=Core.matchRecs(all,a.aliases||[]);
+    const parts=await writeChunks('cs_cases',a.id,recs,{owner:a.id,asof,built});n++;rows.push([a.name||a.id,a.id,recs.filter(x=>x.s==='P').length,recs.filter(x=>x.s==='D').length]);}
+  const t=$('sum');t.innerHTML='<tr><th>अधिवक्ता</th><th>ईमेल</th><th>लम्बित</th><th>निस्तारित</th></tr>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+String(c).replace(/</g,'&lt;')+'</td>').join('')+'</tr>').join('');
+  log('प्रकाशित: '+n+' अधिवक्ता। अधिवक्ताओं से बाहर के प्रकरण: '+(all.length-new Set(all.filter(x=>ADV.some(a=>Core.matchRecs([x],a.aliases||[]).length))).size)+' (किसी अधिवक्ता से नहीं जुड़े)।')}
+$('pub').onclick=async()=>{const fp=$('fp').files[0],fd=$('fd').files[0],asof=$('asof').value;
+  if(!fp||!fd||!asof)return log('Pending फ़ाइल, निस्तारण फ़ाइल और तारीख तीनों चाहिए।');
+  $('pub').disabled=true;$('repub').disabled=true;
+  try{log('फ़ाइलें पढ़ रहे हैं…');const rows=Core.parseList(await fp.text());const kept=Core.ingest(HIST,rows,EX);
+    const dr=Core.parseDisposal(await fd.arrayBuffer());const pk=new Set(kept.flatMap(x=>[x.n,x.g,x.r].filter(Boolean)));
+    const res=Core.applyDisposal(dr,HIST,EX,pk);kept.forEach(x=>{x.s='P';x.iy=Core.yearOf(x)});
+    log(`Pending ${kept.length} (हटाए: ${rows.length-kept.length}), निस्तारित ${res.disposed.length}`+(res.nf?`, ${res.nf} निस्तारित प्रकरणों की पुरानी details नहीं मिलीं`:''));
+    if(res.clash.length)log('चेतावनी: ये प्रकरण pending और निस्तारण दोनों में हैं: '+res.clash.join(', '));
+    await saveHist();log('इतिहास सहेजा।');
+    await writeChunks('cs_snap','p',kept,{asof});await writeChunks('cs_snap','d',res.disposed,{asof});log('स्नैपशॉट सहेजा।');
+    await publish(kept,res.disposed,asof);
+  }catch(e){log('त्रुटि: '+errText(e))}finally{$('pub').disabled=false;$('repub').disabled=false}};
+$('repub').onclick=async()=>{$('pub').disabled=true;$('repub').disabled=true;
+  try{await loadAdv();const P=await readChunks('cs_snap','p'),D=await readChunks('cs_snap','d');if(!P.length)return log('पहले एक बार नई सूची अपलोड करें।');
+    const s=await db.collection('cs_snap').doc('p__0').get();await publish(P,D,s.data().asof)}catch(e){log('त्रुटि: '+errText(e))}finally{$('pub').disabled=false;$('repub').disabled=false}};
+$('out').onclick=()=>auth.signOut();
+auth.onAuthStateChanged(async u=>{
+  if(!u||(u.email||'').toLowerCase()!==ADMIN||!u.emailVerified){$('app').hidden=true;$('login').hidden=false;mountLogin($('login'),'एडमिन लॉगिन','केवल कार्यालय के एडमिन ईमेल से लॉगिन होगा।');
+    if(u){$('login').querySelector('#lmsg').textContent=(u.email||'')+' एडमिन नहीं है।'}return}
+  $('login').hidden=true;$('app').hidden=false;$('me').textContent=u.email;
+  try{await loadEx();await loadHist();await loadAdv()}catch(e){log('त्रुटि: '+errText(e))}});
+</script></body></html>

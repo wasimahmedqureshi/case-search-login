@@ -65,8 +65,8 @@ footer{color:var(--muted);font-size:.78rem;margin-top:24px}
 
 .lcard{max-width:420px;margin:60px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:12px}
 .lcard h2{margin:0;font-size:1.15rem}.lp{margin:0;color:var(--muted);font-size:.9rem}
-#lf{display:flex;flex-direction:column;gap:10px}
-#lf input{font:inherit;padding:11px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
+#lf,#pf,#of{display:flex;flex-direction:column;gap:10px}
+#lf input,#pf input,#of input{font:inherit;padding:11px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
 #lf input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .lor{text-align:center;color:var(--muted);font-size:.8rem}
 .lmsg{margin:0;font-size:.88rem;color:var(--warn);min-height:1.2em}
@@ -168,10 +168,12 @@ $('list').addEventListener('click',e=>{
 
 const ldiv=$('login');
 async function load(user){
-  const em=(user.email||'').toLowerCase();
-  const a=await db.collection('cs_advocates').doc(em).get();
-  if(!a.exists||a.data().active===false){ldiv.hidden=false;mountLogin(ldiv,'पंजीकरण नहीं मिला','');ldiv.querySelector('#lf').hidden=true;ldiv.querySelector('.lor').hidden=true;ldiv.querySelector('#lgoogle').textContent='दूसरे ईमेल से लॉगिन';ldiv.querySelector('#lgoogle').onclick=()=>auth.signOut();ldiv.querySelector('#lmsg').textContent=em+' अधिवक्ता के रूप में पंजीकृत नहीं है। कृपया कार्यालय से संपर्क करें।';$('app').hidden=true;return}
-  const qs=await db.collection('cs_cases').where('owner','==',em).get();
+  const em=(user.email||'').toLowerCase(),phone=user.phoneNumber||'';let adv=null;
+  if(em){const a=await db.collection('cs_advocates').doc(em).get();if(a.exists)adv=a}
+  if(!adv&&phone){const q=await db.collection('cs_advocates').where('phone','==',phone).get();if(!q.empty)adv=q.docs[0]}
+  if(!adv||adv.data().active===false){ldiv.hidden=false;mountLogin(ldiv,'पंजीकरण नहीं मिला','');ldiv.querySelector('#lf').hidden=true;ldiv.querySelectorAll('.lor').forEach(x=>x.hidden=true);ldiv.querySelector('#lgoogle').textContent='दूसरे खाते / नंबर से लॉगिन';ldiv.querySelector('#lgoogle').onclick=()=>auth.signOut();ldiv.querySelector('#lmsg').textContent=(em||phone)+' अधिवक्ता के रूप में पंजीकृत नहीं है। कृपया कार्यालय से संपर्क करें।';$('app').hidden=true;return}
+  const aid=adv.id;
+  const qs=await (phone&&!em?db.collection('cs_cases').where('phone','==',phone):db.collection('cs_cases').where('owner','==',aid)).get();
   let recs=[],asof='',built='';
   qs.forEach(d=>{const v=d.data();recs=recs.concat(v.recs||[]);if((v.asof||'')>asof)asof=v.asof;if((v.built||'')>built)built=v.built});
   ASOF=asof||new Date().toISOString().slice(0,10);D=recs;
@@ -179,13 +181,13 @@ async function load(user){
   years=[...new Set(D.map(x=>x.iy).filter(Boolean))].sort((a,b)=>b-a);
   const np=D.filter(x=>x.s==='P').length;
   $('asof').textContent=fmt(asof);$('built').textContent=fmt(built);
-  $('who').textContent=(a.data().name||em)+' · '+np+' लम्बित · '+(D.length-np)+' निस्तारित';
+  $('who').textContent=(adv.data().name||em||phone)+' · '+np+' लम्बित · '+(D.length-np)+' निस्तारित';
   ldiv.hidden=true;$('app').hidden=false;chips();run();
 }
 $('out').onclick=()=>auth.signOut();
 let started=false;
 auth.onAuthStateChanged(u=>{
   if(u){load(u).catch(e=>{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','');ldiv.querySelector('#lmsg').textContent=errText(e)})}
-  else{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','अपना पंजीकृत ईमेल लिखें। लॉगिन लिंक उसी ईमेल पर आएगा।')}
+  else{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','कार्यालय में दर्ज अपना मोबाइल नंबर लिखें। उस पर OTP आएगा।',{phone:true})}
 });
 </script></body></html>

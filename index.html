@@ -184,7 +184,7 @@ async function load(user){
 $('out').onclick=()=>auth.signOut();
 let started=false;
 auth.onAuthStateChanged(u=>{
-  if(u){load(u).catch(e=>{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'लॉगिन','');ldiv.querySelector('#lmsg').textContent=errText(e)})}
+  if(u){load(u).catch(e=>{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','');ldiv.querySelector('#lmsg').textContent=errText(e)})}
   else{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','अपना पंजीकृत ईमेल लिखें। लॉगिन लिंक उसी ईमेल पर आएगा।')}
 });
 </script></body></html>

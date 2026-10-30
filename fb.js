@@ -2,6 +2,7 @@
 const FB_CONFIG={apiKey:"AIzaSyD9VnIRajIj7cJhD-sPBeyT8CYimE_vF7k",authDomain:"rccms-5614b.firebaseapp.com",projectId:"rccms-5614b",storageBucket:"rccms-5614b.firebasestorage.app",messagingSenderId:"1076214105677",appId:"1:1076214105677:web:4a9ef42556d42eeb203e04"};
 firebase.initializeApp(FB_CONFIG);
 const auth=firebase.auth(),db=firebase.firestore();
+try{db.settings({experimentalAutoDetectLongPolling:true,merge:true})}catch(e){}
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 function errText(e){const c=e&&e.code||'';
   if(c==='auth/unauthorized-continue-uri'||c==='auth/unauthorized-domain')return 'यह वेबसाइट Firebase में अधिकृत नहीं है। Authentication → Settings → Authorized domains में इस साइट का डोमेन जोड़ें।';
@@ -9,6 +10,7 @@ function errText(e){const c=e&&e.code||'';
   if(c==='auth/quota-exceeded'||c==='auth/too-many-requests')return 'अभी लॉगिन लिमिट पूरी है। कुछ देर बाद या "Google से लॉगिन" से कोशिश करें।';
   if(c==='auth/invalid-email')return 'ईमेल सही नहीं है।';
   if(c==='auth/popup-closed-by-user')return '';
+  if(/offline|unavailable/i.test((e&&e.message)||'')||c==='unavailable')return 'Firestore तक नहीं पहुँच पा रहे। Firebase console → Firestore Database में Create database हुआ है या नहीं देखें; विज्ञापन-रोकने वाला extension बंद करके दोबारा खोलें।';
   if(c==='permission-denied'||c==='firestore/permission-denied')return 'अनुमति नहीं है। आपका ईमेल पंजीकृत नहीं है या Firestore नियम लागू नहीं हुए।';
   return (e&&e.message)||'कुछ गलत हुआ।';}
 function mountLogin(box,title,hint){

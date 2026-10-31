@@ -47,6 +47,7 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--li
   <div><label for="an">नाम</label><input id="an" type="text" placeholder="रामबाबू शर्मा"></div>
   <div><label for="am">मोबाइल (OTP लॉगिन के लिए ज़रूरी, 10 अंक)</label><input id="am" type="text" inputmode="numeric" maxlength="16"></div></div>
   <label for="aa" style="margin-top:10px">नाम की वर्तनी (हर नाम नई लाइन में)</label><textarea id="aa"></textarea>
+  <label style="margin-top:10px;display:flex;gap:8px;align-items:center;font-size:.9rem;color:var(--ink)"><input type="checkbox" id="aall" style="width:auto"> कार्यालय का खाता: इस खाते को सभी प्रकरण दिखें (नाम की वर्तनी ज़रूरी नहीं)</label>
   <div class="row" style="margin-top:8px"><button class="b p" id="asave">अधिवक्ता सहेजें</button><span class="m" id="amsg"></span></div>
   <p class="m" style="margin-top:12px">सूची में मिले अधिवक्ता नाम (बार-बार आने के क्रम में)। किसी नाम पर क्लिक करने से वह ऊपर की "वर्तनी" में जुड़ जाएगा:</p>
   <div class="names" id="names"></div>
@@ -86,16 +87,16 @@ async function loadEx(){const d=await db.collection('cs_admin').doc('excluded').
 function renderNames(){const el=$('names');el.innerHTML='';for(const [n,c] of Core.advocateNames(Core.uniq(HIST)).slice(0,150)){const b=document.createElement('button');b.type='button';b.className='nm';b.textContent=n+' ('+c+')';b.onclick=()=>{const t=$('aa');t.value=(t.value.trim()?t.value.trim()+'\n':'')+n};el.appendChild(b)}}
 async function loadAdv(){const s=await db.collection('cs_advocates').get();ADV=[];s.forEach(d=>ADV.push({id:d.id,...d.data()}));ADV.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const tb=$('alist');tb.innerHTML='';for(const a of ADV){const tr=document.createElement('tr');
-    const cells=[a.id,a.name||'',a.phone||'',(a.aliases||[]).join(', ')];cells.forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td)});
-    const td=document.createElement('td');const e=document.createElement('button');e.className='b';e.textContent='बदलें';e.onclick=()=>{$('ae').value=a.id;$('an').value=a.name||'';$('am').value=(a.phone||'').replace('+91','');$('aa').value=(a.aliases||[]).join('\n');window.scrollTo({top:$('ae').offsetTop-80,behavior:'smooth'})};
+    const cells=[a.id,a.name||'',a.phone||'',(a.all?'[सभी प्रकरण] ':'')+(a.aliases||[]).join(', ')];cells.forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td)});
+    const td=document.createElement('td');const e=document.createElement('button');e.className='b';e.textContent='बदलें';e.onclick=()=>{$('ae').value=a.id;$('an').value=a.name||'';$('am').value=(a.phone||'').replace('+91','');$('aa').value=(a.aliases||[]).join('\n');$('aall').checked=!!a.all;window.scrollTo({top:$('ae').offsetTop-80,behavior:'smooth'})};
     const d=document.createElement('button');d.className='b';d.textContent='हटाएँ';d.style.marginLeft='6px';d.onclick=async()=>{if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='पक्का हटाएँ?';return}
       await removeAdv(a.id);loadAdv()};td.append(e,d);tr.appendChild(td);tb.appendChild(tr)}}
 async function removeAdv(id){const s=await db.collection('cs_cases').where('owner','==',id).get();const b=db.batch();s.forEach(x=>b.delete(x.ref));b.delete(db.collection('cs_advocates').doc(id));await b.commit();log('हटाया: '+id)}
 $('asave').onclick=async()=>{const id=$('ae').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(id)){$('amsg').textContent='सही ईमेल लिखें';return}
   const al=$('aa').value.split('\n').map(x=>x.trim()).filter(Boolean);if($('an').value.trim()&&!al.includes($('an').value.trim()))al.push($('an').value.trim());
   const dg=$('am').value.replace(/\D/g,'').slice(-10);if($('am').value.trim()&&dg.length!==10){$('amsg').textContent='मोबाइल 10 अंकों का होना चाहिए';return}
-  await db.collection('cs_advocates').doc(id).set({name:$('an').value.trim(),phone:dg?'+91'+dg:'',aliases:al,active:true});
-  $('amsg').textContent='सहेजा गया। अब "पिछला डेटा दोबारा प्रकाशित करें" दबाएँ।';['ae','an','am','aa'].forEach(i=>$(i).value='');loadAdv()};
+  await db.collection('cs_advocates').doc(id).set({name:$('an').value.trim(),phone:dg?'+91'+dg:'',aliases:al,all:$('aall').checked,active:true});
+  $('amsg').textContent='सहेजा गया। अब "पिछला डेटा दोबारा प्रकाशित करें" दबाएँ।';['ae','an','am','aa'].forEach(i=>$(i).value='');$('aall').checked=false;loadAdv()};
 $('exsave').onclick=async()=>{const l=$('ex').value.split('\n').map(x=>x.trim()).filter(x=>x&&!/^gcms$/i.test(x));EX=new Set(l);await db.collection('cs_admin').doc('excluded').set({list:l});$('exmsg').textContent=l.length+' प्रकरण सहेजे गए।'};
 $('himp').onclick=async()=>{const f=$('fh').files[0];if(!f)return log('history_seed.json चुनें');const j=JSON.parse(await f.text());const m=new Map();
   for(const k in j){const x=j[k];if(Core.inEx(x,EX))continue;for(const kk of new Set([x.n,x.g,x.r]))if(kk&&!HIST.has(kk))HIST.set(kk,x)}
@@ -104,8 +105,8 @@ function fileName(f){const m=/(\d{2})-(\d{2})-(\d{4})\.xls/.exec(f.name);return 
 $('fp').onchange=()=>{const f=$('fp').files[0];if(f&&fileName(f))$('asof').value=fileName(f)};
 async function publish(P,Dd,asof){
   log('अधिवक्ता के अनुसार बाँट रहे हैं…');const all=P.concat(Dd);const built=new Date().toISOString().slice(0,10);let n=0;const rows=[];
-  for(const a of ADV){if(a.active===false)continue;const recs=Core.matchRecs(all,a.aliases||[]);
-    const parts=await writeChunks('cs_cases',a.id,recs,{owner:a.id,phone:a.phone||'',asof,built});n++;rows.push([a.name||a.id,a.id,recs.filter(x=>x.s==='P').length,recs.filter(x=>x.s==='D').length]);}
+  for(const a of ADV){if(a.active===false)continue;const recs=a.all?all:Core.matchRecs(all,a.aliases||[]);
+    const parts=await writeChunks('cs_cases',a.id,recs,{owner:a.id,phone:a.phone||'',asof,built});n++;if(!recs.length)log('चेतावनी: '+(a.name||a.id)+' के नाम की वर्तनी से कोई प्रकरण नहीं मिला। ऊपर "सूची में मिले अधिवक्ता नाम" से सही वर्तनी जोड़ें।');rows.push([a.name||a.id,a.id,recs.filter(x=>x.s==='P').length,recs.filter(x=>x.s==='D').length]);}
   const t=$('sum');t.innerHTML='<tr><th>अधिवक्ता</th><th>ईमेल</th><th>लम्बित</th><th>निस्तारित</th></tr>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+String(c).replace(/</g,'&lt;')+'</td>').join('')+'</tr>').join('');
   log('प्रकाशित: '+n+' अधिवक्ता। अधिवक्ताओं से बाहर के प्रकरण: '+(all.length-new Set(all.filter(x=>ADV.some(a=>Core.matchRecs([x],a.aliases||[]).length))).size)+' (किसी अधिवक्ता से नहीं जुड़े)।')}
 $('pub').onclick=async()=>{const fp=$('fp').files[0],fd=$('fd').files[0],asof=$('asof').value;

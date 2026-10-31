@@ -126,7 +126,7 @@ function run(){
      (st.h==='निस्तारित'||(st.h==='सभी'&&terms.length&&0))?sortDate(b).localeCompare(sortDate(a)):
      (a.s!==b.s?(a.s==='P'?-1:1):sortDate(a).localeCompare(sortDate(b))));
   $('count').textContent=r.length+' प्रकरण मिले'+(r.length>st.lim?' (पहले '+st.lim+' दिख रहे हैं)':'');
-  $('list').innerHTML=r.length?r.slice(0,st.lim).map(x=>card(x,terms)).join(''):'<div class="empty">कोई प्रकरण नहीं मिला। वर्तनी बदलकर या फ़िल्टर हटाकर देखें। यदि प्रकरण हाल ही में निस्तारित हुआ है तो सूची अगले अपडेट में जुड़ेगी।</div>';
+  $('list').innerHTML=r.length?r.slice(0,st.lim).map(x=>card(x,terms)).join(''):(D.length?'<div class="empty">कोई प्रकरण नहीं मिला। वर्तनी बदलकर या फ़िल्टर हटाकर देखें। यदि प्रकरण हाल ही में निस्तारित हुआ है तो सूची अगले अपडेट में जुड़ेगी।</div>':'<div class="empty">इस खाते के लिए अभी कोई प्रकरण प्रकाशित नहीं है। कार्यालय से कहें कि आपके नाम की सही वर्तनी जोड़कर डेटा दोबारा प्रकाशित करें।</div>');
   $('more').hidden=r.length<=st.lim;
   if(r.length===1&&terms.length){const d=document.querySelector('#list details');if(d)d.open=true}
 }

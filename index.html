@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>निवाई केस खोज</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: sticky search bar on top, filter chips, result list with expandable full-detail rows */
@@ -72,122 +71,120 @@ footer{color:var(--muted);font-size:.78rem;margin-top:24px}
 .lmsg{margin:0;font-size:.88rem;color:var(--warn);min-height:1.2em}
 button.b:disabled{opacity:.6}
 .who{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--muted);font-size:.85rem;margin-top:2px}
+</style><style>
+.gate{max-width:460px;margin:40px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.gate h2{margin:0;font-size:1.15rem}.gate p{margin:0;color:var(--muted);font-size:.88rem}
+.gate label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:3px}
+.gate input,.gate textarea{font:inherit;width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
+.gate textarea{min-height:64px;resize:vertical}
+.gate input:focus,.gate textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.gerr{color:var(--warn);font-size:.88rem;min-height:1.2em}
+.hint{color:var(--muted);text-align:center;padding:36px 10px}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="fb.js"></script></head><body>
-<div id="login"></div>
+<div class="wrap" id="gate" hidden><div class="gate">
+ <h2>निवाई केस खोज · प्रवेश</h2>
+ <p>सहायक कलक्टर (फास्ट ट्रेक) निवाई। प्रकरण की स्थिति देखने के लिए अपना विवरण भरें। यह विवरण कार्यालय के रिकॉर्ड में दर्ज किया जाएगा।</p>
+ <form id="gf" style="display:flex;flex-direction:column;gap:10px" autocomplete="on">
+  <div><label for="gn">नाम</label><input id="gn" type="text" maxlength="80" required autocomplete="name"></div>
+  <div><label for="gm">मोबाइल नंबर (10 अंक)</label><input id="gm" type="tel" inputmode="numeric" maxlength="16" required autocomplete="tel-national"></div>
+  <div><label for="ga">पता</label><textarea id="ga" maxlength="200" required autocomplete="street-address"></textarea></div>
+  <button class="b p" id="gb" type="submit">पोर्टल खोलें</button>
+ </form>
+ <div class="gerr" id="gerr" aria-live="polite"></div>
+</div></div>
 <div class="wrap" id="app" hidden>
 <header><h1>निवाई केस खोज · Case Search</h1>
 <div class="sub">सहायक कलक्टर (फास्ट ट्रेक) निवाई, जिला टोंक · सूची दिनांक <span id="asof"></span></div>
-<div class="who"><span id="who"></span><button class="b" id="out" type="button">लॉग आउट</button></div></header>
+<div class="who"><span id="who"></span><button class="b" id="chg" type="button">विवरण बदलें</button></div></header>
 <div class="bar">
- <div class="sbox"><input id="q" type="search" placeholder="प्रकरण संख्या (GCMS / RRCMS), अपीलार्थी या प्रतिपक्षी का नाम" autocomplete="off" aria-label="Search"></div>
+ <div class="sbox"><input id="q" type="search" placeholder="अपीलार्थी / प्रतिपक्षी का नाम या प्रकरण संख्या (GCMS / RRCMS)" autocomplete="off" aria-label="खोज"></div>
  <div class="chips" id="chips"></div>
 </div>
 <div class="count" id="count" aria-live="polite"></div>
 <div class="list" id="list"></div>
 <button class="b more" id="more" hidden>और दिखाएँ</button>
-<footer>खोज प्रकरण संख्या, अपीलार्थी, प्रतिपक्षी, ग्राम, खसरा, अधिवक्ता और धारा में होती है। यह जानकारी केवल सूचना हेतु है; आधिकारिक स्थिति के लिए RRCMS पोर्टल या न्यायालय देखें। सूची अंतिम बार अपडेट: <span id="built"></span>। यहाँ केवल वही प्रकरण दिखते हैं जिनमें आप अधिवक्ता हैं।</footer>
+<footer>खोज केवल अपीलार्थी, प्रतिपक्षी के नाम और GCMS/RRCMS प्रकरण संख्या से होती है। यह जानकारी केवल सूचना हेतु है; आधिकारिक स्थिति के लिए RRCMS पोर्टल या न्यायालय देखें। सूची अंतिम बार अपडेट: <span id="built"></span>।</footer>
 </div>
 <script>
-let D=[],ASOF='';
+let D=[],ASOF='',ME=null;
 const $=id=>document.getElementById(id);
 const norm=s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const compact=s=>(s||'').toLowerCase().replace(/[\s\/\-]/g,'');
 const fmt=d=>d?d.split('-').reverse().join('-'):'—';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let st={k:'सभी वर्ग',h:'सभी',y:'',sort:'hd',lim:50};
-const KS=['सभी वर्ग','दावे','प्रार्थना पत्र','इजराय'];
+let st={h:'सभी',lim:30};
 const HS=['सभी','लम्बित','निस्तारित'];
-let years=[];
-function chips(){
-  $('chips').innerHTML=HS.map(k=>`<button class="chip" data-h="${k}" aria-pressed="${st.h===k}">${k}</button>`).join('')+
-  KS.map(k=>`<button class="chip" data-k="${k}" aria-pressed="${st.k===k}">${k}</button>`).join('')+
-  `<select id="y" aria-label="वर्ष"><option value="">सभी वर्ष</option>${years.map(y=>`<option ${st.y==y?'selected':''}>${y}</option>`).join('')}</select>`+
-  `<select id="s" aria-label="क्रम"><option value="hd" ${st.sort=='hd'?'selected':''}>पेशी / निर्णय तिथि</option><option value="no" ${st.sort=='no'?'selected':''}>प्रकरण संख्या</option><option value="old" ${st.sort=='old'?'selected':''}>सबसे पुराना पहले</option></select>`;
-}
+function chips(){$('chips').innerHTML=HS.map(k=>`<button class="chip" data-h="${k}" aria-pressed="${st.h===k}">${k}</button>`).join('')}
 function hl(t,terms){t=esc(t||'');if(!terms.length)return t;
   const re=new RegExp('('+terms.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');return t.replace(re,'<mark>$1</mark>');}
-const instKey=x=>(x.ir||x.ig||'9999-99-99');
-const sortDate=x=>x.s==='D'?(x.dd||'9'):(x.hd||'9');
 function run(){
-  const q=norm($('q').value),terms=q?q.split(' '):[],cq=compact($('q').value);
-  let r=D.filter(x=>{
+  const raw=$('q').value,q=norm(raw),terms=q?q.split(' '):[],cq=compact(raw);
+  if(compact(raw).length<3){$('count').textContent='';$('list').innerHTML='<div class="hint">अपीलार्थी या प्रतिपक्षी का नाम, अथवा GCMS/RRCMS प्रकरण संख्या लिखें (कम से कम 3 अक्षर)।</div>';$('more').hidden=true;return}
+  const r=D.filter(x=>{
     if(st.h==='लम्बित'&&x.s!=='P')return false;
     if(st.h==='निस्तारित'&&x.s!=='D')return false;
-    if(st.k!=='सभी वर्ग'&&x.k!==st.k)return false;
-    if(st.y&&x.iy!=st.y)return false;
-    if(!terms.length)return true;
-    return terms.every(t=>x.key.includes(t))||(cq.length>2&&x.ck.includes(cq));
+    return terms.every(t=>x.key.includes(t))||x.ck.includes(cq);
   });
-  r.sort((a,b)=>st.sort==='no'?a.n.localeCompare(b.n,'en',{numeric:true}):st.sort==='old'?instKey(a).localeCompare(instKey(b)):
-     (st.h==='निस्तारित'||(st.h==='सभी'&&terms.length&&0))?sortDate(b).localeCompare(sortDate(a)):
-     (a.s!==b.s?(a.s==='P'?-1:1):sortDate(a).localeCompare(sortDate(b))));
+  r.sort((a,b)=>a.s!==b.s?(a.s==='P'?-1:1):((a.hd||a.dd||'9')<(b.hd||b.dd||'9')?-1:1));
   $('count').textContent=r.length+' प्रकरण मिले'+(r.length>st.lim?' (पहले '+st.lim+' दिख रहे हैं)':'');
-  $('list').innerHTML=r.length?r.slice(0,st.lim).map(x=>card(x,terms)).join(''):(D.length?'<div class="empty">कोई प्रकरण नहीं मिला। वर्तनी बदलकर या फ़िल्टर हटाकर देखें। यदि प्रकरण हाल ही में निस्तारित हुआ है तो सूची अगले अपडेट में जुड़ेगी।</div>':'<div class="empty">इस खाते के लिए अभी कोई प्रकरण प्रकाशित नहीं है। कार्यालय से कहें कि आपके नाम की सही वर्तनी जोड़कर डेटा दोबारा प्रकाशित करें।</div>');
+  $('list').innerHTML=r.length?r.slice(0,st.lim).map(x=>card(x,terms)).join(''):'<div class="empty">कोई प्रकरण नहीं मिला। वर्तनी बदलकर देखें। नाम का एक ही शब्द लिखकर भी खोज सकते हैं। यदि प्रकरण हाल का है तो सूची अगले अपडेट में जुड़ेगी।</div>';
   $('more').hidden=r.length<=st.lim;
-  if(r.length===1&&terms.length){const d=document.querySelector('#list details');if(d)d.open=true}
+  if(r.length===1){const d=document.querySelector('#list details');if(d)d.open=true}
 }
-function age(a,b){ // months between ISO dates
-  if(!a||!b)return '';let m=(+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5,7)-+a.slice(5,7));if(+b.slice(8)<+a.slice(8))m--;
+function age(a,b){if(!a||!b)return '';let m=(+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5,7)-+a.slice(5,7));if(+b.slice(8)<+a.slice(8))m--;
   if(m<0)return '';const y=Math.floor(m/12),mm=m%12;return (y?y+' वर्ष ':'')+(mm||!y?mm+' माह':'')}
 function card(x,terms){
   const P=x.s==='P',late=P&&x.hd&&x.hd<ASOF,days=late?Math.round((new Date(ASOF)-new Date(x.hd))/864e5):0;
-  const no=x.r&&x.g?x.r+' / '+x.g:x.n;
-  const ap=x.ap||(x.title||'—'),vs=x.rs?` <span>बनाम</span> ${hl(x.rs,terms)}`:'';
-  const side=P?`<span class="hd">${fmt(x.hd)}</span><span class="pill ${late?'late':'up'}">${late?days+' दिन पहले की तारीख':'आगामी पेशी'}</span>`
-    :`<span class="pill dis">निस्तारित</span><span class="hd">${fmt(x.dd)}</span>`;
-  const it=[['RRCMS प्रकरण संख्या',x.r,1],['GCMS प्रकरण संख्या',x.g,1],
-    ...(P?[['अगली पेशी',fmt(x.hd)]]:[['निर्णय दिनांक',fmt(x.dd)],['केस शीर्षिक',x.title]]),
-    ['संस्थापन दिनांक (RRCMS)',x.ir&&fmt(x.ir)],['संस्थापन दिनांक (GCMS)',x.ig&&fmt(x.ig)],
-    ...(!P&&inst(x)&&x.dd?[['निस्तारण में लगा समय',age(inst(x),x.dd)]]:[]),
-    ['अपीलार्थी / वादी',x.ap,0,1],['प्रतिपक्षी',x.rs,0,1],['अपीलार्थी के अधिवक्ता',x.aa,0,1],['प्रतिपक्षी के अधिवक्ता',x.ra,0,1],
-    ['प्रकरण का उद्देश्य',x.pur],['प्रकरण का प्रकार',x.ct],['MPR वर्ग',x.k],['अधिनियम',x.act],['धारा',x.sec],
-    ['तहसील',x.tehsil],['ग्राम',x.vil,0,1],['खसरा नं.',x.kh],['संभाग / जिला',x.dv&&x.dv+' / '+x.ds],['सम्बद्ध प्रकरण',x.cc,1]];
-  const dl=it.filter(i=>P||i[1]).map(i=>`<div><dt>${i[0]}</dt><dd${i[2]?' class="mono"':''}>${i[3]?hl(i[1]||'—',terms):esc(i[1]||'—')}</dd></div>`).join('');
-  return `<details class="row"><summary>
-   <div class="no">${hl(no,terms)}</div>
-   <div class="parties">${hl(ap,terms)}${vs}</div>
-   <div class="meta"><span>${esc(x.ct||x.k)}${x.ct?' · '+esc(x.k):''}</span><span>धारा ${hl(x.sec||'—',terms)}</span>${x.vil?`<span>${hl(x.vil,terms)}</span>`:''}</div>
-   <div class="side">${side}</div>
-  </summary><div class="det"><dl>${dl}</dl><div class="act"><button class="b" data-copy="${esc(x.n)}">प्रकरण संख्या कॉपी करें</button>${x.cc?`<button class="b p" data-go="${esc(x.cc)}">सम्बद्ध प्रकरण खोजें</button>`:''}</div></div></details>`;
+  const no=x.r&&x.g?x.r+' / '+x.g:x.n,ap=x.ap||x.title||'—',vs=x.rs?` <span>बनाम</span> ${hl(x.rs,terms)}`:'';
+  const side=P?`<span class="pill up">लम्बित</span><span class="hd">पेशी ${fmt(x.hd)}</span>${late?`<span class="pill late">${days} दिन पहले की तारीख</span>`:''}`:`<span class="pill dis">निस्तारित</span><span class="hd">${fmt(x.dd)}</span>`;
+  const i0=x.ir||x.ig;
+  const it=[['स्थिति',P?'लम्बित':'निस्तारित'],...(P?[['अगली पेशी',fmt(x.hd)],['प्रकरण का उद्देश्य',x.pur]]:[['निर्णय दिनांक',fmt(x.dd)],['निस्तारण में लगा समय',age(i0,x.dd)],['केस शीर्षिक',x.title]]),
+   ['RRCMS प्रकरण संख्या',x.r,1],['GCMS प्रकरण संख्या',x.g,1],['संस्थापन दिनांक (RRCMS)',x.ir&&fmt(x.ir)],['संस्थापन दिनांक (GCMS)',x.ig&&fmt(x.ig)],
+   ['अपीलार्थी / वादी',x.ap],['प्रतिपक्षी',x.rs],['अपीलार्थी के अधिवक्ता',x.aa],['प्रतिपक्षी के अधिवक्ता',x.ra],
+   ['प्रकरण का प्रकार',x.ct],['अधिनियम',x.act],['धारा',x.sec],['तहसील',x.tehsil],['ग्राम',x.vil],['खसरा नं.',x.kh],['सम्बद्ध प्रकरण',x.cc,1]];
+  const dl=it.filter(i=>i[1]).map(i=>`<div><dt>${i[0]}</dt><dd${i[2]?' class="mono"':''}>${esc(i[1])}</dd></div>`).join('');
+  return `<details class="row"><summary><div class="no">${hl(no,terms)}</div><div class="parties">${hl(ap,terms)}${vs}</div>
+   <div class="meta"><span>${esc(x.ct||x.k||'')}</span><span>धारा ${esc(x.sec||'—')}</span>${x.vil?`<span>${esc(x.vil)}</span>`:''}</div><div class="side">${side}</div></summary>
+   <div class="det"><dl>${dl}</dl><div class="act"><button class="b" data-copy="${esc(x.n)}">प्रकरण संख्या कॉपी करें</button>${x.cc?`<button class="b p" data-go="${esc(x.cc)}">सम्बद्ध प्रकरण खोजें</button>`:''}</div></div></details>`;
 }
-function inst(x){return x.ir||x.ig}
-$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
-  if(b.dataset.k)st.k=b.dataset.k;if(b.dataset.h)st.h=b.dataset.h;st.lim=50;chips();run();});
-$('chips').addEventListener('change',e=>{if(e.target.id==='y')st.y=e.target.value;if(e.target.id==='s')st.sort=e.target.value;st.lim=50;run();});
-$('q').addEventListener('input',()=>{st.lim=50;run()});
+$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;st.h=b.dataset.h;st.lim=30;chips();run()});
+$('q').addEventListener('input',()=>{st.lim=30;run()});
 $('more').addEventListener('click',()=>{st.lim+=100;run()});
-$('list').addEventListener('click',e=>{
-  const c=e.target.closest('[data-copy]'),g=e.target.closest('[data-go]');
+$('list').addEventListener('click',e=>{const c=e.target.closest('[data-copy]'),g=e.target.closest('[data-go]');
   if(c){const t=c.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{c.textContent='कॉपी हो गया'}).catch(()=>{const s=document.createElement('span');s.textContent=' '+t;c.after(s);const r=document.createRange();r.selectNodeContents(s);getSelection().removeAllRanges();getSelection().addRange(r);c.textContent='चुना गया, कॉपी करें'})}
-  if(g){st.h='सभी';chips();$('q').value=g.dataset.go;window.scrollTo({top:0});run()}
-});
-
-const ldiv=$('login');
-async function load(user){
-  const em=(user.email||'').toLowerCase(),phone=user.phoneNumber||'';let adv=null;
-  if(em){const a=await db.collection('cs_advocates').doc(em).get();if(a.exists)adv=a}
-  if(!adv&&phone){const q=await db.collection('cs_advocates').where('phone','==',phone).get();if(!q.empty)adv=q.docs[0]}
-  if(!adv||adv.data().active===false){ldiv.hidden=false;mountLogin(ldiv,'पंजीकरण नहीं मिला','');ldiv.querySelector('#lf').hidden=true;ldiv.querySelectorAll('.lor').forEach(x=>x.hidden=true);ldiv.querySelector('#lgoogle').textContent='दूसरे खाते / नंबर से लॉगिन';ldiv.querySelector('#lgoogle').onclick=()=>auth.signOut();ldiv.querySelector('#lmsg').textContent=(em||phone)+' अधिवक्ता के रूप में पंजीकृत नहीं है। कृपया कार्यालय से संपर्क करें।';$('app').hidden=true;return}
-  const aid=adv.id;
-  const qs=await (phone&&!em?db.collection('cs_cases').where('phone','==',phone):db.collection('cs_cases').where('owner','==',aid)).get();
-  let recs=[],asof='',built='';
-  qs.forEach(d=>{const v=d.data();recs=recs.concat(v.recs||[]);if((v.asof||'')>asof)asof=v.asof;if((v.built||'')>built)built=v.built});
-  ASOF=asof||new Date().toISOString().slice(0,10);D=recs;
-  D.forEach(x=>{x.key=norm([x.n,x.g,x.r,x.ap,x.rs,x.vil,x.kh,x.aa,x.ra,x.sec,x.cc,x.title].join(' '));x.ck=compact(x.g+' '+x.r);});
-  years=[...new Set(D.map(x=>x.iy).filter(Boolean))].sort((a,b)=>b-a);
-  const np=D.filter(x=>x.s==='P').length;
-  $('asof').textContent=fmt(asof);$('built').textContent=fmt(built);
-  $('who').textContent=(adv.data().name||em||phone)+' · '+np+' लम्बित · '+(D.length-np)+' निस्तारित';
-  ldiv.hidden=true;$('app').hidden=false;chips();run();
+  if(g){st.h='सभी';chips();$('q').value=g.dataset.go;window.scrollTo({top:0});run()}});
+/* ---------- gate: visitor details, logged for the office ---------- */
+const KEY='cs_visitor';
+const saved=()=>{try{return JSON.parse(store.get(KEY)||'null')}catch(e){return null}};
+function showGate(msg){$('app').hidden=true;$('gate').hidden=false;const s=saved();if(s){$('gn').value=s.name;$('gm').value=s.mobile;$('ga').value=s.address}$('gerr').textContent=msg||''}
+async function enter(v){
+  if(!auth.currentUser)await auth.signInAnonymously();
+  const uid=auth.currentUser.uid,ts=firebase.firestore.FieldValue.serverTimestamp();
+  await db.collection('cs_visitors').doc(uid).set({name:v.name,mobile:v.mobile,address:v.address,uid,last:ts});
+  await db.collection('cs_visits').add({name:v.name,mobile:v.mobile,address:v.address,uid,at:ts});
+  store.set(KEY,JSON.stringify(v));
+  const qs=await db.collection('cs_data').get();let recs=[],asof='',built='';
+  qs.forEach(d=>{const x=d.data();recs=recs.concat(x.recs||[]);if((x.asof||'')>asof)asof=x.asof;if((x.built||'')>built)built=x.built});
+  D=recs;ASOF=asof||new Date().toISOString().slice(0,10);
+  D.forEach(x=>{x.key=norm([x.n,x.g,x.r,x.ap,x.rs,x.title].join(' '));x.ck=compact(x.g+' '+x.r)});
+  ME=v;$('asof').textContent=fmt(asof);$('built').textContent=fmt(built);
+  const np=D.filter(x=>x.s==='P').length;$('who').textContent='नमस्ते, '+v.name+' · सूची में '+np+' लम्बित और '+(D.length-np)+' निस्तारित प्रकरण';
+  $('gate').hidden=true;$('app').hidden=false;chips();run();$('q').focus();
 }
-$('out').onclick=()=>auth.signOut();
+$('gf').addEventListener('submit',async e=>{e.preventDefault();
+  const v={name:$('gn').value.trim(),mobile:$('gm').value.replace(/\D/g,'').slice(-10),address:$('ga').value.trim()};
+  if(v.name.length<2)return $('gerr').textContent='कृपया अपना पूरा नाम लिखें।';
+  if(v.mobile.length!==10)return $('gerr').textContent='10 अंकों का मोबाइल नंबर लिखें।';
+  if(v.address.length<3)return $('gerr').textContent='कृपया अपना पता लिखें।';
+  $('gb').disabled=true;$('gerr').textContent='खोल रहे हैं…';
+  try{await enter(v)}catch(err){$('gerr').textContent=errText(err)}finally{$('gb').disabled=false}});
+$('chg').onclick=()=>showGate('');
+const s0=saved();
+auth.onAuthStateChanged(u=>{if(started)return;started=true;
+  if(u&&s0)enter(s0).catch(err=>showGate(errText(err)));else showGate('')});
 let started=false;
-auth.onAuthStateChanged(u=>{
-  if(u){load(u).catch(e=>{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','');ldiv.querySelector('#lmsg').textContent=errText(e)})}
-  else{$('app').hidden=true;ldiv.hidden=false;mountLogin(ldiv,'निवाई केस खोज · अधिवक्ता लॉगिन','कार्यालय में दर्ज अपना मोबाइल नंबर लिखें। उस पर OTP आएगा।',{phone:true})}
-});
 </script></body></html>

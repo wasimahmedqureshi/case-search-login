@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function csAdmin() {
+      return request.auth != null
+        && request.auth.token.get('email', '') == 'wasimahmedqureshi@gmail.com'
+        && request.auth.token.get('email_verified', false) == true;
+    }
+    // A visitor may read case data only after they have saved their name, mobile and address.
+    function csVisitor() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/cs_visitors/$(request.auth.uid));
+    }
+    function csValid(d) {
+      return d.name is string && d.name.size() >= 2 && d.name.size() <= 80
+        && d.mobile is string && d.mobile.matches('^[0-9]{10}$')
+        && d.address is string && d.address.size() >= 3 && d.address.size() <= 200
+        && d.uid == request.auth.uid;
+    }
+
+    match /cs_data/{id} {
+      allow read: if csVisitor() || csAdmin();
+      allow write: if csAdmin();
+    }
+    match /cs_visitors/{uid} {
+      allow create, update: if request.auth != null && request.auth.uid == uid && csValid(request.resource.data)
+        && request.resource.data.keys().hasOnly(['name','mobile','address','uid','last']);
+      allow read: if (request.auth != null && request.auth.uid == uid) || csAdmin();
+      allow delete: if csAdmin();
+    }
+    match /cs_visits/{id} {
+      allow create: if request.auth != null && csValid(request.resource.data)
+        && request.resource.data.keys().hasOnly(['name','mobile','address','uid','at']);
+      allow read, delete: if csAdmin();
+    }
+    match /cs_history/{id} { allow read, write: if csAdmin(); }
+    match /cs_admin/{id}   { allow read, write: if csAdmin(); }
+  }
+}

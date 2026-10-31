@@ -102,6 +102,7 @@ button.b:disabled{opacity:.6}
 <div class="who"><span id="who"></span><button class="b" id="chg" type="button">विवरण बदलें</button></div></header>
 <div class="bar">
  <div class="sbox"><input id="q" type="search" placeholder="अपीलार्थी / प्रतिपक्षी का नाम या प्रकरण संख्या (GCMS / RRCMS)" autocomplete="off" aria-label="खोज"></div>
+ <div class="m" style="color:var(--muted);font-size:.78rem;margin-top:6px">हिन्दी नाम अंग्रेज़ी (Roman) में भी लिख सकते हैं, जैसे <i>ramavatar</i> या <i>girdhar singh</i>।</div>
  <div class="chips" id="chips"></div>
 </div>
 <div class="count" id="count" aria-live="polite"></div>
@@ -116,6 +117,16 @@ const norm=s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const compact=s=>(s||'').toLowerCase().replace(/[\s\/\-]/g,'');
 const fmt=d=>d?d.split('-').reverse().join('-'):'—';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Phonetic skeleton: lets "ramavatar" find "रामावतार" (consonants only, aspirates and vowels ignored) */
+const DV={'क':'k','ख':'k','ग':'g','घ':'g','ङ':'n','च':'c','छ':'c','ज':'j','झ':'j','ञ':'n','ट':'t','ठ':'t','ड':'d','ढ':'d','ण':'n','त':'t','थ':'t','द':'d','ध':'d','न':'n','प':'p','फ':'f','ब':'b','भ':'b','म':'m','य':'y','र':'r','ल':'l','व':'v','श':'s','ष':'s','स':'s','ळ':'l'};
+function skel(s){
+  let o='';for(const ch of String(s||'').normalize('NFD').toLowerCase()){
+    if(DV[ch]!==undefined)o+=DV[ch];
+    else if(/[a-z]/.test(ch))o+=ch;
+    else if(/[\s]/.test(ch))o+=' ';}
+  o=o.replace(/ph/g,'f').replace(/q/g,'k').replace(/x/g,'ks').replace(/z/g,'j').replace(/w/g,'v').replace(/c(?!h)/g,'k');
+  o=o.replace(/h/g,'').replace(/[aeiou]/g,'').replace(/\s+/g,'').replace(/(.)\1+/g,'$1');return o}
 let st={h:'सभी',lim:30};
 const HS=['सभी','लम्बित','निस्तारित'];
 function chips(){$('chips').innerHTML=HS.map(k=>`<button class="chip" data-h="${k}" aria-pressed="${st.h===k}">${k}</button>`).join('')}
@@ -124,12 +135,15 @@ function hl(t,terms){t=esc(t||'');if(!terms.length)return t;
 function run(){
   const raw=$('q').value,q=norm(raw),terms=q?q.split(' '):[],cq=compact(raw);
   if(compact(raw).length<3){$('count').textContent='';$('list').innerHTML='<div class="hint">अपीलार्थी या प्रतिपक्षी का नाम, अथवा GCMS/RRCMS प्रकरण संख्या लिखें (कम से कम 3 अक्षर)।</div>';$('more').hidden=true;return}
+  const qsk=raw.trim().split(/\s+/).map(skel).filter(Boolean);if(qsk.some(k=>k.length<2))qsk.length=0;
   const r=D.filter(x=>{
     if(st.h==='लम्बित'&&x.s!=='P')return false;
     if(st.h==='निस्तारित'&&x.s!=='D')return false;
-    return terms.every(t=>x.key.includes(t))||x.ck.includes(cq);
+    if(terms.every(t=>x.key.includes(t))||x.ck.includes(cq)){x._p=0;return true}
+    if(qsk.length>0&&qsk.every(k=>x.sk.some(w=>w.includes(k)))){x._p=1;return true}
+    return false;
   });
-  r.sort((a,b)=>a.s!==b.s?(a.s==='P'?-1:1):((a.hd||a.dd||'9')<(b.hd||b.dd||'9')?-1:1));
+  r.sort((a,b)=>a._p!==b._p?a._p-b._p:a.s!==b.s?(a.s==='P'?-1:1):((a.hd||a.dd||'9')<(b.hd||b.dd||'9')?-1:1));
   $('count').textContent=r.length+' प्रकरण मिले'+(r.length>st.lim?' (पहले '+st.lim+' दिख रहे हैं)':'');
   $('list').innerHTML=r.length?r.slice(0,st.lim).map(x=>card(x,terms)).join(''):'<div class="empty">कोई प्रकरण नहीं मिला। वर्तनी बदलकर देखें। नाम का एक ही शब्द लिखकर भी खोज सकते हैं। यदि प्रकरण हाल का है तो सूची अगले अपडेट में जुड़ेगी।</div>';
   $('more').hidden=r.length<=st.lim;
@@ -170,7 +184,7 @@ async function enter(v){
   const qs=await db.collection('cs_data').get();let recs=[],asof='',built='';
   qs.forEach(d=>{const x=d.data();recs=recs.concat(x.recs||[]);if((x.asof||'')>asof)asof=x.asof;if((x.built||'')>built)built=x.built});
   D=recs;ASOF=asof||new Date().toISOString().slice(0,10);
-  D.forEach(x=>{x.key=norm([x.n,x.g,x.r,x.ap,x.rs,x.title].join(' '));x.ck=compact(x.g+' '+x.r)});
+  D.forEach(x=>{x.key=norm([x.n,x.g,x.r,x.ap,x.rs,x.title].join(' '));x.ck=compact(x.g+' '+x.r);x.sk=[...new Set([x.ap,x.rs,x.title].join(' ').split(/\s+/).map(skel).filter(k=>k.length>=2))]});
   ME=v;$('asof').textContent=fmt(asof);$('built').textContent=fmt(built);
   const np=D.filter(x=>x.s==='P').length;$('who').textContent='नमस्ते, '+v.name+' · सूची में '+np+' लम्बित और '+(D.length-np)+' निस्तारित प्रकरण';
   $('gate').hidden=true;$('app').hidden=false;chips();run();$('q').focus();

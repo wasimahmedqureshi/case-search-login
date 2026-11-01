@@ -158,7 +158,7 @@ function card(x,terms){
   const i0=x.ir||x.ig;
   const it=[['स्थिति',P?'लम्बित':'निस्तारित'],...(P?[['अगली पेशी',fmt(x.hd)],['प्रकरण का उद्देश्य',x.pur]]:[['निर्णय दिनांक',fmt(x.dd)],['निस्तारण में लगा समय',age(i0,x.dd)],['केस शीर्षिक',x.title]]),
    ['RRCMS प्रकरण संख्या',x.r,1],['GCMS प्रकरण संख्या',x.g,1],['संस्थापन दिनांक (RRCMS)',x.ir&&fmt(x.ir)],['संस्थापन दिनांक (GCMS)',x.ig&&fmt(x.ig)],
-   ['अपीलार्थी / वादी',x.ap],['प्रतिपक्षी',x.rs],['अपीलार्थी के अधिवक्ता',x.aa],['प्रतिपक्षी के अधिवक्ता',x.ra],
+   ['निर्णय का परिणाम',x.rem],['मैनुअल प्रकरण संख्या',x.man],['अपीलार्थी / वादी',x.ap],['प्रतिपक्षी',x.rs],['अपीलार्थी के अधिवक्ता',x.aa],['प्रतिपक्षी के अधिवक्ता',x.ra],
    ['प्रकरण का प्रकार',x.ct],['अधिनियम',x.act],['धारा',x.sec],['तहसील',x.tehsil],['ग्राम',x.vil],['खसरा नं.',x.kh],['सम्बद्ध प्रकरण',x.cc,1]];
   const dl=it.filter(i=>i[1]).map(i=>`<div><dt>${i[0]}</dt><dd${i[2]?' class="mono"':''}>${esc(i[1])}</dd></div>`).join('');
   return `<details class="row"><summary><div class="no">${hl(no,terms)}</div><div class="parties">${hl(ap,terms)}${vs}</div>
@@ -175,6 +175,12 @@ $('list').addEventListener('click',e=>{const c=e.target.closest('[data-copy]'),g
 const KEY='cs_visitor';
 const saved=()=>{try{return JSON.parse(store.get(KEY)||'null')}catch(e){return null}};
 function showGate(msg){$('app').hidden=true;$('gate').hidden=false;const s=saved();if(s){$('gn').value=s.name;$('gm').value=s.mobile;$('ga').value=s.address}$('gerr').textContent=msg||''}
+function prep(x){x.key=norm([x.n,x.g,x.r,x.man,x.ap,x.rs,x.title].join(' '));x.ck=compact(x.g+' '+x.r+' '+(x.man||''));x.sk=[...new Set([x.ap,x.rs,x.title].join(' ').split(/\s+/).map(skel).filter(k=>k.length>=2))]}
+let ARCH=0,base='';
+async function loadArchive(){
+  try{const qs=await db.collection('cs_archive').get();let a=[];qs.forEach(d=>{a=a.concat(d.data().recs||[])});
+    const have=new Set(D.flatMap(x=>[x.n,x.g,x.r].filter(Boolean)));a=a.filter(x=>![x.n,x.g,x.r].some(k=>k&&have.has(k)));
+    a.forEach(prep);D=D.concat(a);ARCH=a.length;if(ARCH)$('who').textContent=base+' · पुराने निस्तारित '+ARCH;run()}catch(e){}}
 async function enter(v){
   if(!auth.currentUser)await auth.signInAnonymously();
   const uid=auth.currentUser.uid,ts=firebase.firestore.FieldValue.serverTimestamp();
@@ -184,10 +190,10 @@ async function enter(v){
   const qs=await db.collection('cs_data').get();let recs=[],asof='',built='';
   qs.forEach(d=>{const x=d.data();recs=recs.concat(x.recs||[]);if((x.asof||'')>asof)asof=x.asof;if((x.built||'')>built)built=x.built});
   D=recs;ASOF=asof||new Date().toISOString().slice(0,10);
-  D.forEach(x=>{x.key=norm([x.n,x.g,x.r,x.ap,x.rs,x.title].join(' '));x.ck=compact(x.g+' '+x.r);x.sk=[...new Set([x.ap,x.rs,x.title].join(' ').split(/\s+/).map(skel).filter(k=>k.length>=2))]});
+  D.forEach(prep);
   ME=v;$('asof').textContent=fmt(asof);$('built').textContent=fmt(built);
-  const np=D.filter(x=>x.s==='P').length;$('who').textContent='नमस्ते, '+v.name+' · सूची में '+np+' लम्बित और '+(D.length-np)+' निस्तारित प्रकरण';
-  $('gate').hidden=true;$('app').hidden=false;chips();run();$('q').focus();
+  const np=D.filter(x=>x.s==='P').length;$('who').textContent='नमस्ते, '+v.name+' · सूची में '+np+' लम्बित और '+(D.length-np)+' निस्तारित प्रकरण';base=$('who').textContent;
+  $('gate').hidden=true;$('app').hidden=false;chips();run();$('q').focus();loadArchive();
 }
 $('gf').addEventListener('submit',async e=>{e.preventDefault();
   const v={name:$('gn').value.trim(),mobile:$('gm').value.replace(/\D/g,'').slice(-10),address:$('ga').value.trim()};

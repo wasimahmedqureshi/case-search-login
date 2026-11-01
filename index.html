@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14284b">
 <title>सहायक कलेक्टर (फ़ास्ट ट्रैक), निवाई</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -76,6 +77,26 @@ footer{color:var(--muted);font-size:.78rem;margin-top:26px;padding-top:14px;bord
 .gate .note{font-size:.78rem;border-top:1px solid var(--line);padding-top:12px}
 .gerr{color:var(--warn);font-size:.88rem;min-height:1.2em}
 @media (max-width:520px){.top h1{font-size:1.08rem}.seal{width:40px;height:40px}.row>summary{grid-template-columns:1fr}.side{grid-row:auto;grid-column:1;flex-direction:row;flex-wrap:wrap;text-align:left;align-items:center}}
+
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.top .in{padding-top:max(14px,env(safe-area-inset-top,0px))}
+.wv .top .in{padding-top:max(30px,env(safe-area-inset-top,0px))}
+.chip{min-height:38px}
+button.b{min-height:40px}
+input[type=search],.gate input,.gate textarea{font-size:16px}
+@media (max-width:520px){
+  .top .in{gap:10px;padding-bottom:12px}
+  .top h1{font-size:1.02rem;line-height:1.3}
+  .top p{font-size:.74rem;line-height:1.35}
+  .seal{width:38px;height:38px}.seal svg{width:22px;height:22px}
+  .gate{margin-top:16px;padding:18px}
+  .ptitle{padding-top:14px}
+  .row>summary{padding:12px}
+  .det{padding:12px}
+  dl{grid-template-columns:1fr 1fr;gap:10px 12px}
+}
+@media (max-width:360px){dl{grid-template-columns:1fr}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -112,6 +133,7 @@ footer{color:var(--muted);font-size:.78rem;margin-top:26px;padding-top:14px;bord
  <footer>खोज केवल अपीलार्थी, प्रतिपक्षी के नाम और GCMS/RRCMS प्रकरण संख्या से होती है। यह जानकारी केवल सूचना हेतु है; आधिकारिक स्थिति के लिए RRCMS पोर्टल या न्यायालय देखें। सूची अंतिम बार अपडेट: <span id="built"></span>।</footer>
 </main>
 <script>
+if(/; wv\)|Version\/[\d.]+ Chrome/.test(navigator.userAgent)&&/Android/.test(navigator.userAgent))document.documentElement.classList.add('wv');
 let D=[],ASOF='',ME=null;
 const $=id=>document.getElementById(id);
 const norm=s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();

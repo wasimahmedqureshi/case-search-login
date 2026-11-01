@@ -1,115 +1,116 @@
 <!doctype html>
 <html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>निवाई केस खोज</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<title>सहायक कलेक्टर (फ़ास्ट ट्रैक), निवाई</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: sticky search bar on top, filter chips, result list with expandable full-detail rows */
+/* Layout: navy court header band, then a single centred column (entry form or search + results) */
 :root{
-  --bg:#f3f4f7; --surface:#ffffff; --ink:#1b2333; --muted:#5d6678; --line:#dde1ea;
-  --accent:#1e4f8a; --accent-ink:#ffffff; --accent-soft:#e3ecf8;
-  --warn:#9a5b00; --warn-soft:#fdf0d8; --ok:#17695a; --ok-soft:#dff3ee; --mark:#ffe58a;
-  --sans:'Noto Sans Devanagari',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
-}
+  --bg:#f3f4f8;--surface:#ffffff;--ink:#162033;--muted:#586277;--line:#d8dce6;
+  --navy:#14284b;--navy-ink:#ffffff;--gold:#c59a3a;
+  --accent:#1b3a6b;--accent-ink:#ffffff;--accent-soft:#e4ebf7;
+  --info:#1b4f9c;--info-soft:#e3ecfa;--ok:#16684f;--ok-soft:#dcf2ea;--warn:#8f5600;--warn-soft:#fcefd2;--mark:#ffe58a;
+  --sans:'Noto Sans Devanagari',system-ui,-apple-system,'Segoe UI',sans-serif;--serif:'Noto Serif Devanagari','Noto Sans Devanagari',Georgia,serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#12161f; --surface:#1b212d; --ink:#e8ecf4; --muted:#9aa4b8; --line:#2c3444;
-  --accent:#6ea6ee; --accent-ink:#0c1524; --accent-soft:#1e2d45;
-  --warn:#f0b455; --warn-soft:#3a2d12; --ok:#6fd1bb; --ok-soft:#133a33; --mark:#6b5a12; color-scheme:dark}}
+  --bg:#0f141d;--surface:#18202c;--ink:#e8ecf4;--muted:#9aa5ba;--line:#2a3344;
+  --navy:#0b1730;--navy-ink:#f1f4fa;--gold:#d7ae55;
+  --accent:#7aa7e8;--accent-ink:#0c1524;--accent-soft:#1d2b44;
+  --info:#8db6f2;--info-soft:#1c2c47;--ok:#6fd1bb;--ok-soft:#12372f;--warn:#f0b455;--warn-soft:#3a2d12;--mark:#6b5a12;color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#12161f; --surface:#1b212d; --ink:#e8ecf4; --muted:#9aa4b8; --line:#2c3444;
-  --accent:#6ea6ee; --accent-ink:#0c1524; --accent-soft:#1e2d45;
-  --warn:#f0b455; --warn-soft:#3a2d12; --ok:#6fd1bb; --ok-soft:#133a33; --mark:#6b5a12; color-scheme:dark}
+  --bg:#0f141d;--surface:#18202c;--ink:#e8ecf4;--muted:#9aa5ba;--line:#2a3344;
+  --navy:#0b1730;--navy-ink:#f1f4fa;--gold:#d7ae55;
+  --accent:#7aa7e8;--accent-ink:#0c1524;--accent-soft:#1d2b44;
+  --info:#8db6f2;--info-soft:#1c2c47;--ok:#6fd1bb;--ok-soft:#12372f;--warn:#f0b455;--warn-soft:#3a2d12;--mark:#6b5a12;color-scheme:dark}
 [hidden]{display:none!important}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
-  padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:900px;margin:0 auto}
-header{padding-top:20px}
-h1{font-size:1.35rem;margin:0;font-weight:700;text-wrap:balance}
-.sub{color:var(--muted);font-size:.85rem;margin-top:2px}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;margin:0;padding-bottom:36px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{background:var(--navy);color:var(--navy-ink);border-bottom:3px solid var(--gold)}
+.top .in{max-width:920px;margin:0 auto;padding-block:14px;display:flex;gap:14px;align-items:center}
+.seal{flex:none;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--gold);display:grid;place-items:center;color:var(--gold)}
+.top h1{font-family:var(--serif);font-weight:600;font-size:1.28rem;line-height:1.25;margin:0;text-wrap:balance}
+.top p{margin:2px 0 0;font-size:.82rem;opacity:.82}
+.wrap{max-width:952px;margin:0 auto}
+.ptitle{padding-top:20px}
+.ptitle h2{font-family:var(--serif);font-size:1.12rem;margin:0}
+.ptitle p{margin:2px 0 0;color:var(--muted);font-size:.86rem}
+.who{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--muted);font-size:.84rem;margin-top:10px}
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 10px}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.sbox{display:flex;gap:8px}
-input[type=search]{flex:1;min-width:0;font:inherit;font-size:1rem;padding:12px 14px;border:1.5px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
-input[type=search]:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sbox{display:flex}
+input[type=search]{flex:1;min-width:0;font:inherit;font-size:1rem;padding:13px 15px;border:1.5px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.shint{color:var(--muted);font-size:.78rem;margin-top:6px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
-.chip,select{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer}
-select{border-radius:6px;padding:5px 8px}
+.chip{font:inherit;font-size:.84rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer}
 .chip[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .count{color:var(--muted);font-size:.85rem;margin:6px 0 10px}
 .list{display:flex;flex-direction:column;gap:8px}
 .row{background:var(--surface);border:1px solid var(--line);border-radius:6px}
-.row>summary{list-style:none;cursor:pointer;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+.row[open]{border-color:var(--accent)}
+.row>summary{list-style:none;cursor:pointer;padding:13px 15px;display:grid;grid-template-columns:1fr auto;gap:4px 14px}
 .row>summary::-webkit-details-marker{display:none}
-.no{font-family:var(--mono);font-size:.9rem;font-weight:500;overflow-wrap:anywhere}
-.parties{grid-column:1;font-weight:600;overflow-wrap:anywhere}
-.parties span{color:var(--muted);font-weight:400}
-.meta{grid-column:1;color:var(--muted);font-size:.82rem;display:flex;flex-wrap:wrap;gap:4px 14px}
-.side{grid-row:1/4;grid-column:2;text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end;font-size:.8rem}
-.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.75rem;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
-.pill.dis{background:var(--ok-soft);color:var(--ok)} .pill.late{background:var(--warn-soft);color:var(--warn)} .pill.up{background:var(--ok-soft);color:var(--ok)}
+.no{font-family:var(--mono);font-size:.88rem;font-weight:500;overflow-wrap:anywhere}
+.parties{grid-column:1;font-weight:600;overflow-wrap:anywhere}.parties span{color:var(--muted);font-weight:400}
+.meta{grid-column:1;color:var(--muted);font-size:.82rem;display:flex;flex-wrap:wrap;gap:2px 14px}
+.side{grid-row:1/4;grid-column:2;display:flex;flex-direction:column;gap:5px;align-items:flex-end;font-size:.8rem;text-align:right}
+.pill{display:inline-block;padding:1px 10px;border-radius:999px;font-size:.75rem;white-space:nowrap;background:var(--info-soft);color:var(--info)}
+.pill.up{background:var(--info-soft);color:var(--info)}.pill.dis{background:var(--ok-soft);color:var(--ok)}.pill.late{background:var(--warn-soft);color:var(--warn)}
 .hd{font-family:var(--mono);white-space:nowrap}
 mark{background:var(--mark);color:inherit;border-radius:2px}
-.det{border-top:1px solid var(--line);padding:12px 14px 14px}
-dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px 18px;margin:0}
-dl div{min-width:0} dt{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-dd{margin:0;overflow-wrap:anywhere}
+.det{border-top:1px solid var(--line);padding:14px 15px 15px}
+dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px 20px;margin:0}
+dl div{min-width:0}dt{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}
 .mono{font-family:var(--mono);font-size:.9rem}
-.act{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-button.b{font:inherit;font-size:.85rem;padding:5px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;cursor:pointer}
+.act{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+button.b{font:inherit;font-size:.86rem;padding:6px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;cursor:pointer}
 button.b.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.more{margin:14px auto;display:block}
-.empty{padding:40px 10px;text-align:center;color:var(--muted)}
-footer{color:var(--muted);font-size:.78rem;margin-top:24px}
-@media (max-width:520px){.row>summary{grid-template-columns:1fr}.side{grid-row:auto;grid-column:1;flex-direction:row;flex-wrap:wrap;text-align:left;align-items:center}}
-
-.lcard{max-width:420px;margin:60px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:12px}
-.lcard h2{margin:0;font-size:1.15rem}.lp{margin:0;color:var(--muted);font-size:.9rem}
-#lf,#pf,#of{display:flex;flex-direction:column;gap:10px}
-#lf input,#pf input,#of input{font:inherit;padding:11px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
-#lf input:focus{outline:2px solid var(--accent);outline-offset:1px}
-.lor{text-align:center;color:var(--muted);font-size:.8rem}
-.lmsg{margin:0;font-size:.88rem;color:var(--warn);min-height:1.2em}
 button.b:disabled{opacity:.6}
-.who{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--muted);font-size:.85rem;margin-top:2px}
-</style><style>
-.gate{max-width:460px;margin:40px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:12px}
-.gate h2{margin:0;font-size:1.15rem}.gate p{margin:0;color:var(--muted);font-size:.88rem}
+.more{margin:14px auto;display:block}
+.empty,.hint{padding:38px 10px;text-align:center;color:var(--muted)}
+footer{color:var(--muted);font-size:.78rem;margin-top:26px;padding-top:14px;border-top:1px solid var(--line)}
+.gate{max-width:480px;margin:28px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.gate h2{font-family:var(--serif);margin:0;font-size:1.15rem}.gate p{margin:0;color:var(--muted);font-size:.88rem}
 .gate label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:3px}
 .gate input,.gate textarea{font:inherit;width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
 .gate textarea{min-height:64px;resize:vertical}
-.gate input:focus,.gate textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.gate .note{font-size:.78rem;border-top:1px solid var(--line);padding-top:12px}
 .gerr{color:var(--warn);font-size:.88rem;min-height:1.2em}
-.hint{color:var(--muted);text-align:center;padding:36px 10px}
+@media (max-width:520px){.top h1{font-size:1.08rem}.seal{width:40px;height:40px}.row>summary{grid-template-columns:1fr}.side{grid-row:auto;grid-column:1;flex-direction:row;flex-wrap:wrap;text-align:left;align-items:center}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="fb.js"></script></head><body>
-<div class="wrap" id="gate" hidden><div class="gate">
- <h2>निवाई केस खोज · प्रवेश</h2>
- <p>सहायक कलक्टर (फास्ट ट्रेक) निवाई। प्रकरण की स्थिति देखने के लिए अपना विवरण भरें। यह विवरण कार्यालय के रिकॉर्ड में दर्ज किया जाएगा।</p>
- <form id="gf" style="display:flex;flex-direction:column;gap:10px" autocomplete="on">
-  <div><label for="gn">नाम</label><input id="gn" type="text" maxlength="80" required autocomplete="name"></div>
-  <div><label for="gm">मोबाइल नंबर (10 अंक)</label><input id="gm" type="tel" inputmode="numeric" maxlength="16" required autocomplete="tel-national"></div>
-  <div><label for="ga">पता</label><textarea id="ga" maxlength="200" required autocomplete="street-address"></textarea></div>
-  <button class="b p" id="gb" type="submit">पोर्टल खोलें</button>
- </form>
- <div class="gerr" id="gerr" aria-live="polite"></div>
-</div></div>
-<div class="wrap" id="app" hidden>
-<header><h1>निवाई केस खोज · Case Search</h1>
-<div class="sub">सहायक कलक्टर (फास्ट ट्रेक) निवाई, जिला टोंक · सूची दिनांक <span id="asof"></span></div>
-<div class="who"><span id="who"></span><button class="b" id="chg" type="button">विवरण बदलें</button></div></header>
-<div class="bar">
- <div class="sbox"><input id="q" type="search" placeholder="अपीलार्थी / प्रतिपक्षी का नाम या प्रकरण संख्या (GCMS / RRCMS)" autocomplete="off" aria-label="खोज"></div>
- <div class="m" style="color:var(--muted);font-size:.78rem;margin-top:6px">हिन्दी नाम अंग्रेज़ी (Roman) में भी लिख सकते हैं, जैसे <i>ramavatar</i> या <i>girdhar singh</i>।</div>
- <div class="chips" id="chips"></div>
-</div>
-<div class="count" id="count" aria-live="polite"></div>
-<div class="list" id="list"></div>
-<button class="b more" id="more" hidden>और दिखाएँ</button>
-<footer>खोज केवल अपीलार्थी, प्रतिपक्षी के नाम और GCMS/RRCMS प्रकरण संख्या से होती है। यह जानकारी केवल सूचना हेतु है; आधिकारिक स्थिति के लिए RRCMS पोर्टल या न्यायालय देखें। सूची अंतिम बार अपडेट: <span id="built"></span>।</footer>
-</div>
+<header class="top gut"><div class="in"><div class="seal"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v17M7 20h10M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0L5 7zM19 7l-3 7a3 3 0 0 0 6 0l-3-7z"/></svg></div><div><h1>सहायक कलेक्टर (फ़ास्ट ट्रैक), निवाई</h1><p>राजस्व न्यायालय · तहसील निवाई, जिला टोंक (राजस्थान)</p></div></div></header>
+
+<main class="wrap gut" id="gate" hidden>
+ <div class="gate">
+  <h2>प्रकरण स्थिति खोज</h2>
+  <p>नागरिक एवं अधिवक्ता अपने प्रकरण की वर्तमान स्थिति देखने के लिए नीचे अपना विवरण भरें। यह विवरण कार्यालय के रिकॉर्ड में दर्ज किया जाएगा।</p>
+  <form id="gf" style="display:flex;flex-direction:column;gap:12px" autocomplete="on">
+   <div><label for="gn">पूरा नाम</label><input id="gn" type="text" maxlength="80" required autocomplete="name"></div>
+   <div><label for="gm">मोबाइल नंबर (10 अंक)</label><input id="gm" type="tel" inputmode="numeric" maxlength="16" required autocomplete="tel-national"></div>
+   <div><label for="ga">पता</label><textarea id="ga" maxlength="200" required autocomplete="street-address"></textarea></div>
+   <button class="b p" id="gb" type="submit" style="padding:11px 14px;font-size:1rem">पोर्टल खोलें</button>
+  </form>
+  <div class="gerr" id="gerr" aria-live="polite"></div>
+  <p class="note">यह पोर्टल केवल सूचना हेतु है। आधिकारिक स्थिति के लिए न्यायालय अथवा RRCMS पोर्टल देखें।</p>
+ </div>
+</main>
+
+<main class="wrap gut" id="app" hidden>
+ <div class="ptitle"><h2>प्रकरण स्थिति खोज</h2><p>सूची दिनांक <span id="asof"></span></p></div>
+ <div class="who"><span id="who"></span><button class="b" id="chg" type="button">विवरण बदलें</button></div>
+ <div class="bar">
+  <div class="sbox"><input id="q" type="search" placeholder="अपीलार्थी / प्रतिपक्षी का नाम या प्रकरण संख्या (GCMS / RRCMS)" autocomplete="off" aria-label="खोज"></div>
+  <div class="shint">हिन्दी नाम अंग्रेज़ी (Roman) में भी लिख सकते हैं, जैसे <i>ramavatar</i> या <i>girdhar singh</i>।</div>
+  <div class="chips" id="chips"></div>
+ </div>
+ <div class="count" id="count" aria-live="polite"></div>
+ <div class="list" id="list"></div>
+ <button class="b more" id="more" hidden>और दिखाएँ</button>
+ <footer>खोज केवल अपीलार्थी, प्रतिपक्षी के नाम और GCMS/RRCMS प्रकरण संख्या से होती है। यह जानकारी केवल सूचना हेतु है; आधिकारिक स्थिति के लिए RRCMS पोर्टल या न्यायालय देखें। सूची अंतिम बार अपडेट: <span id="built"></span>।</footer>
+</main>
 <script>
 let D=[],ASOF='',ME=null;
 const $=id=>document.getElementById(id);

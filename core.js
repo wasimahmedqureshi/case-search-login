@@ -41,8 +41,28 @@ function applyDisposal(drows,hist,EX,pendKeys){const out=[];let nf=0;const clash
     if(!x.ap&&r.title.includes(' बनाम ')){const p=r.title.split(' बनाम ');x.ap=p[0].trim();x.rs=p.slice(1).join(' बनाम ').trim()}
     x.k=klass(x.ct||'',x.sec);x.dd=r.dd;x.hd='';x.s='D';x.iy=yearOf(x);if(pendKeys.has(r.no))clash.push(r.no);out.push(x)}
   out.sort((a,b)=>(b.dd||'').localeCompare(a.dd||''));return{disposed:out,nf,clash}}
+
+function decodeText(buf){const u=new Uint8Array(buf);let enc='utf-8';
+  if(u[0]===0xFF&&u[1]===0xFE)enc='utf-16le';else if(u[0]===0xFE&&u[1]===0xFF)enc='utf-16be';
+  return new TextDecoder(enc).decode(u)}
+/* "Case Decision Register" export from the old GCMS portal: old disposed cases */
+function parseRegister(text){
+  const doc=new DOMParser().parseFromString(text,'text/html');let hdr=null,rows=null;
+  for(const t of doc.querySelectorAll('table')){const trs=[...t.rows];
+    for(let i=0;i<Math.min(15,trs.length);i++){const c=[...trs[i].cells].map(x=>x.textContent.trim());
+      if(c.includes('Case No.')&&c.includes('Decision Date')){hdr=c;rows=trs.slice(i+1);break}}
+    if(hdr)break}
+  if(!hdr)throw new Error('इस फ़ाइल में "Case Decision Register" की तालिका (Case No., Decision Date) नहीं मिली।');
+  const ix=n=>hdr.indexOf(n),out=[],seen=new Set();
+  for(const tr of rows){const c=[...tr.cells].map(x=>x.textContent.trim());if(c.length<hdr.length-1||!/^\d+$/.test(c[0]))continue;
+    const g=k=>sv(c[ix(k)]);const no=g('Case No.');if(!no||seen.has(no))continue;seen.add(no);
+    let sec=g('Section Name');const m=/"([^"]*)"/.exec(sec);if(m)sec=m[1];else sec=sec.replace(/^=/,'');
+    const rr=/^\d{15}$/.test(no),inst=iso(g('Institution Date'));
+    out.push({n:no,g:rr?'':no,r:rr?no:'',man:g('Manual Case No.'),ig:rr?'':inst,ir:rr?inst:'',iy:parseInt(inst.slice(0,4))||0,act:g('Act Name'),sec,pur:g('Case Purpose'),rem:g('Decision Remark'),
+      ap:g('Primary Appellant'),rs:g('Primary Respondent'),dd:iso(g('Decision Date')),s:'D',k:klass('',sec),arch:1});}
+  return out}
 const uniq=hist=>[...new Set(hist.values())];
 function matchRecs(recs,aliases){const set=new Set(aliases.map(norm).filter(Boolean));if(!set.size)return[];
   return recs.filter(x=>names(x.aa).some(n=>set.has(n))||names(x.ra).some(n=>set.has(n)))}
 function advocateNames(recs){const m=new Map();for(const x of recs)for(const f of[x.aa,x.ra])for(const n of rawNames(f))m.set(n,(m.get(n)||0)+1);return[...m].sort((a,b)=>b[1]-a[1])}
-return{norm,rawNames,names,klass,yearOf,parseList,parseDisposal,ingest,applyDisposal,uniq,matchRecs,advocateNames,inEx}})();
+return{decodeText,parseRegister,norm,rawNames,names,klass,yearOf,parseList,parseDisposal,ingest,applyDisposal,uniq,matchRecs,advocateNames,inEx}})();

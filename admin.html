@@ -55,8 +55,13 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--li
  </section>
 
  <section><h2>4. एक बार का काम: पुराना इतिहास</h2>
-  <p class="m">पुराने प्रकरणों की जानकारी (ताकि निस्तारित होने पर पूरी details दिखें)। <b>history_seed.json</b> सिर्फ़ पहली बार चुनें। अभी इतिहास में: <b id="hcount">…</b> प्रकरण।</p>
+  <p class="m">पुराने pending प्रकरणों की जानकारी (ताकि निस्तारित होने पर पूरी details दिखें)। पुरानी निस्तारण सूची जोड़ने के लिए नीचे का सेक्शन 5 इस्तेमाल करें। <b>history_seed.json</b> सिर्फ़ पहली बार चुनें। अभी इतिहास में: <b id="hcount">…</b> प्रकरण।</p>
   <div class="row"><input id="fh" type="file" accept=".json"><button class="b" id="himp">इतिहास जोड़ें</button></div>
+ </section>
+
+ <section><h2>5. पुराना निस्तारण रजिस्टर (Case Decision Register)</h2>
+  <p class="m">पुराने पोर्टल (GCMS) की "Case Decision Register" .xls फ़ाइल यहाँ चुनें, ताकि पुराने निस्तारित प्रकरणों की स्थिति भी पोर्टल पर दिखे। हर बार नई फ़ाइल चुनने पर पुराना रजिस्टर बदल जाता है, इसलिए पूरी अवधि की फ़ाइल चुनें। यह ऊपर वाले "इतिहास" (history_seed.json) से अलग है।</p>
+  <div class="row"><input id="fr" type="file" accept=".xls,.html,.htm"><button class="b p" id="rimp">रजिस्टर प्रकाशित करें</button></div>
  </section>
 
  <section><h2>स्थिति</h2><div id="log" aria-live="polite"></div></section>
@@ -94,6 +99,13 @@ $('pub').onclick=async()=>{const fp=$('fp').files[0],fd=$('fd').files[0],asof=$(
     const built=new Date().toISOString().slice(0,10);const n=await writeChunks('cs_data','c',kept.concat(res.disposed),{asof,built});
     log('प्रकाशित: '+(kept.length+res.disposed.length)+' प्रकरण ('+n+' भागों में)। अब पोर्टल पर नई सूची दिखेगी।');
   }catch(e){log('त्रुटि: '+errText(e))}finally{$('pub').disabled=false}};
+$('rimp').onclick=async()=>{const f=$('fr').files[0];if(!f)return log('Case Decision Register (.xls) फ़ाइल चुनें।');
+  $('rimp').disabled=true;
+  try{log('रजिस्टर पढ़ रहे हैं…');let recs=Core.parseRegister(Core.decodeText(await f.arrayBuffer()));const before=recs.length;recs=recs.filter(x=>!Core.inEx(x,EX));
+    log('रजिस्टर में '+before+' प्रकरण (हटाए: '+(before-recs.length)+')');
+    const n=await writeChunks('cs_archive','a',recs,{built:new Date().toISOString().slice(0,10)});
+    log('प्रकाशित: '+recs.length+' पुराने निस्तारित प्रकरण ('+n+' भागों में)। पोर्टल पर अब ये दिखेंगे।');
+  }catch(e){log('त्रुटि: '+errText(e))}finally{$('rimp').disabled=false}};
 /* visitors log */
 const ts=v=>v&&v.toDate?v.toDate().toLocaleString('en-GB',{timeZone:'Asia/Kolkata'}):'';
 function renderVis(){const q=$('vq').value.trim().toLowerCase();const tb=$('vlist');tb.innerHTML='';let n=0;

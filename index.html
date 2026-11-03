@@ -124,7 +124,7 @@ input[type=search],.gate input,.gate textarea{font-size:16px}
  <div class="who"><span id="who"></span><button class="b" id="chg" type="button">विवरण बदलें</button></div>
  <div class="bar">
   <div class="sbox"><input id="q" type="search" placeholder="अपीलार्थी / प्रतिपक्षी का नाम या प्रकरण संख्या (GCMS / RRCMS)" autocomplete="off" aria-label="खोज"></div>
-  <div class="shint">हिन्दी नाम अंग्रेज़ी (Roman) में भी लिख सकते हैं, जैसे <i>ramesh</i> या <i>ghasi lal</i>।</div>
+  <div class="shint">हिन्दी नाम अंग्रेज़ी (Roman) में भी लिख सकते हैं, जैसे <i>ramavatar</i> या <i>girdhar singh</i>।</div>
   <div class="chips" id="chips"></div>
  </div>
  <div class="count" id="count" aria-live="polite"></div>
@@ -185,7 +185,7 @@ function card(x,terms){
    ['प्रकरण का प्रकार',x.ct],['अधिनियम',x.act],['धारा',x.sec],['तहसील',x.tehsil],['ग्राम',x.vil],['खसरा नं.',x.kh],['सम्बद्ध प्रकरण',x.cc,1]];
   const dl=it.filter(i=>i[1]).map(i=>`<div><dt>${i[0]}</dt><dd${i[2]?' class="mono"':''}>${esc(i[1])}</dd></div>`).join('');
   return `<details class="row"><summary><div class="no">${hl(no,terms)}</div><div class="parties">${hl(ap,terms)}${vs}</div>
-   <div class="meta"><span>${esc(x.ct||x.k||'')}</span><span>धारा ${esc(x.sec||'—')}</span>${x.vil?`<span>${esc(x.vil)}</span>`:''}</div><div class="side">${side}</div></summary>
+   <div class="meta"><span>${esc(x.ct||x.k||'')}</span>${x.sec||!x.mo?`<span>धारा ${esc(x.sec||"—")}</span>`:`<span>पुरानी सूची</span>`}${x.vil?`<span>${esc(x.vil)}</span>`:''}</div><div class="side">${side}</div></summary>
    <div class="det"><dl>${dl}</dl><div class="act"><button class="b" data-copy="${esc(x.n)}">प्रकरण संख्या कॉपी करें</button>${x.cc?`<button class="b p" data-go="${esc(x.cc)}">सम्बद्ध प्रकरण खोजें</button>`:''}</div></div></details>`;
 }
 $('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;st.h=b.dataset.h;st.lim=30;chips();run()});
@@ -202,7 +202,7 @@ function prep(x){x.key=norm([x.n,x.g,x.r,x.man,x.ap,x.rs,x.title].join(' '));x.c
 let ARCH=0,base='';
 async function loadArchive(){
   try{const qs=await db.collection('cs_archive').get();let a=[];qs.forEach(d=>{a=a.concat(d.data().recs||[])});
-    const have=new Set(D.flatMap(x=>[x.n,x.g,x.r].filter(Boolean)));a=a.filter(x=>![x.n,x.g,x.r].some(k=>k&&have.has(k)));
+    const have=new Set(D.flatMap(x=>[x.n,x.g,x.r].filter(Boolean)));a=a.filter(x=>![x.n,x.g,x.r].some(k=>k&&have.has(k)));const mk=new Set(D.concat(a).filter(x=>!x.mo&&x.man).map(x=>x.man.replace(/\s/g,'')+'|'+x.dd));a=a.filter(x=>!x.mo||!mk.has(x.man+'|'+x.dd));
     a.forEach(prep);D=D.concat(a);ARCH=a.length;if(ARCH)$('who').textContent=base+' · पुराने निस्तारित '+ARCH;run()}catch(e){}}
 async function enter(v){
   if(!auth.currentUser)await auth.signInAnonymously();

@@ -64,6 +64,11 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--li
   <div class="row"><input id="fr" type="file" accept=".xls,.html,.htm"><button class="b p" id="rimp">रजिस्टर प्रकाशित करें</button></div>
  </section>
 
+ <section><h2>6. पुरानी निस्तारण सूची (सिर्फ़ मैनुअल प्रकरण संख्या वाली)</h2>
+  <p class="m">ऐसी पुरानी सूची जिसमें GCMS/RRCMS नंबर नहीं, केवल मैनुअल प्रकरण संख्या (जैसे 219/2009), केस शीर्षिक और निर्णय तिथि हो। फ़ाइल चुनें (.xls/.xlsx)। यह सेक्शन 5 के रजिस्टर को <b>नहीं बदलता</b>, अलग से जुड़ता है। हर बार नई फ़ाइल चुनने पर इसी सेक्शन की पिछली सूची बदलती है।</p>
+  <div class="row"><input id="fm" type="file" accept=".xls,.xlsx"><button class="b p" id="mimp">मैनुअल सूची प्रकाशित करें</button></div>
+ </section>
+
  <section><h2>स्थिति</h2><div id="log" aria-live="polite"></div></section>
 </div>
 <script>
@@ -106,6 +111,12 @@ $('rimp').onclick=async()=>{const f=$('fr').files[0];if(!f)return log('Case Deci
     const n=await writeChunks('cs_archive','a',recs,{built:new Date().toISOString().slice(0,10)});
     log('प्रकाशित: '+recs.length+' पुराने निस्तारित प्रकरण ('+n+' भागों में)। पोर्टल पर अब ये दिखेंगे।');
   }catch(e){log('त्रुटि: '+errText(e))}finally{$('rimp').disabled=false}};
+$('mimp').onclick=async()=>{const f=$('fm').files[0];if(!f)return log('मैनुअल निस्तारण सूची (.xls) चुनें।');
+  $('mimp').disabled=true;
+  try{log('मैनुअल सूची पढ़ रहे हैं…');const recs=Core.parseManual(await f.arrayBuffer());log('सूची में '+recs.length+' प्रकरण (दोहराव हटाकर)');
+    const n=await writeChunks('cs_archive','m',recs,{built:new Date().toISOString().slice(0,10)});
+    log('प्रकाशित: '+recs.length+' पुराने निस्तारित प्रकरण ('+n+' भागों में)। पोर्टल पर अब ये दिखेंगे।');
+  }catch(e){log('त्रुटि: '+errText(e))}finally{$('mimp').disabled=false}};
 /* visitors log */
 const ts=v=>v&&v.toDate?v.toDate().toLocaleString('en-GB',{timeZone:'Asia/Kolkata'}):'';
 function renderVis(){const q=$('vq').value.trim().toLowerCase();const tb=$('vlist');tb.innerHTML='';let n=0;

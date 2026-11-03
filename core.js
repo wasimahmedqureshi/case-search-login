@@ -61,8 +61,20 @@ function parseRegister(text){
     out.push({n:no,g:rr?'':no,r:rr?no:'',man:g('Manual Case No.'),ig:rr?'':inst,ir:rr?inst:'',iy:parseInt(inst.slice(0,4))||0,act:g('Act Name'),sec,pur:g('Case Purpose'),rem:g('Decision Remark'),
       ap:g('Primary Appellant'),rs:g('Primary Respondent'),dd:iso(g('Decision Date')),s:'D',k:klass('',sec),arch:1});}
   return out}
+/* Old disposal list with MANUAL case numbers only (columns: प्रकरण क्र., केस शीर्षिक, निर्णय तिथि) */
+function parseManual(buf){const wb=XLSX.read(buf,{type:'array',cellDates:true});const out=[],seen=new Set();let found=false;
+  for(const nm of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[nm],{header:1,defval:'',raw:true});
+    let hi=-1;for(let i=0;i<Math.min(15,rows.length);i++){const c=rows[i].map(x=>String(x).trim());if(c.includes('प्रकरण क्र.')&&c.includes('निर्णय तिथि')){hi=i;break}}
+    if(hi<0)continue;found=true;const h=rows[hi].map(x=>String(x).trim()),ci=h.indexOf('प्रकरण क्र.'),ti=h.indexOf('केस शीर्षिक'),di=h.indexOf('निर्णय तिथि');
+    for(const r of rows.slice(hi+1)){const no=sv(r[ci]).replace(/\s+/g,'');if(!no)continue;
+      const title=sv(ti>=0?r[ti]:'').replace(/\s+/g,' ').trim(),dd=xlDate(r[di]);const k=no+'|'+norm(title)+'|'+dd;if(seen.has(k))continue;seen.add(k);
+      let ap=title,rs='';const m=title.split('बनाम');if(m.length>1){ap=m[0].trim();rs=m.slice(1).join('बनाम').trim()}
+      const y=parseInt((/(\d{4})\s*$/.exec(no)||[])[1])||0;
+      out.push({n:no,g:'',r:'',man:no,mo:1,title,ap,rs,dd,iy:y,s:'D',k:'',arch:1});}}
+  if(!found)throw new Error('इस फ़ाइल में "प्रकरण क्र." और "निर्णय तिथि" वाली तालिका नहीं मिली।');
+  return out}
 const uniq=hist=>[...new Set(hist.values())];
 function matchRecs(recs,aliases){const set=new Set(aliases.map(norm).filter(Boolean));if(!set.size)return[];
   return recs.filter(x=>names(x.aa).some(n=>set.has(n))||names(x.ra).some(n=>set.has(n)))}
 function advocateNames(recs){const m=new Map();for(const x of recs)for(const f of[x.aa,x.ra])for(const n of rawNames(f))m.set(n,(m.get(n)||0)+1);return[...m].sort((a,b)=>b[1]-a[1])}
-return{decodeText,parseRegister,norm,rawNames,names,klass,yearOf,parseList,parseDisposal,ingest,applyDisposal,uniq,matchRecs,advocateNames,inEx}})();
+return{decodeText,parseRegister,parseManual,norm,rawNames,names,klass,yearOf,parseList,parseDisposal,ingest,applyDisposal,uniq,matchRecs,advocateNames,inEx}})();

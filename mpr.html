@@ -1,0 +1,184 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MPR जनरेटर · सहायक कलेक्टर (फ़ास्ट ट्रैक), निवाई</title>
+<style>
+:root{--bg:#f3f4f7;--surface:#fff;--ink:#1b2333;--muted:#5d6678;--line:#dde1ea;--accent:#1e4f8a;--accent-ink:#fff;--warn:#9a5b00;--ok:#17695a;--sans:'Noto Sans Devanagari',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161f;--surface:#1b212d;--ink:#e8ecf4;--muted:#9aa4b8;--line:#2c3444;--accent:#6ea6ee;--accent-ink:#0c1524;--warn:#f0b455;--ok:#6fd1bb;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161f;--surface:#1b212d;--ink:#e8ecf4;--muted:#9aa4b8;--line:#2c3444;--accent:#6ea6ee;--accent-ink:#0c1524;--warn:#f0b455;--ok:#6fd1bb;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;margin:0;padding-block:16px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-size:1.3rem;margin:0}h2{font-size:1.05rem;margin:0 0 8px}p{margin:0 0 8px}.m{color:var(--muted);font-size:.85rem}
+section,.lcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.lcard{max-width:420px;margin:60px auto 0;display:flex;flex-direction:column;gap:12px}.lp{margin:0;color:var(--muted);font-size:.9rem}
+#lf{display:flex;flex-direction:column;gap:10px}.lor{text-align:center;color:var(--muted);font-size:.8rem}.lmsg{margin:0;font-size:.88rem;color:var(--warn)}
+input[type=text],input[type=email],input[type=date],textarea{font:inherit;width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
+textarea{min-height:70px;resize:vertical}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.b{font:inherit;font-size:.9rem;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;cursor:pointer}
+button.b.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}button.b:disabled{opacity:.55;cursor:default}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:3px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;font-size:.88rem}th{color:var(--muted);font-weight:500}
+.scroll{overflow-x:auto}
+#log{font-family:var(--mono);font-size:.8rem;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;max-height:260px;overflow:auto;min-height:60px}
+.names{display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow:auto}.nm{font-size:.8rem;padding:2px 9px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink);cursor:pointer}
+
+.pv{overflow-x:auto;background:#fff;color:#000;border:1px solid var(--line);border-radius:6px;padding:12px;margin-bottom:14px}
+.pv table.rp{border-collapse:collapse;width:auto;margin:0 auto;color:#000;table-layout:fixed}
+.pv table.rp td{border:1px solid #000;padding:3px 4px;text-align:center;vertical-align:middle;font-size:12px;white-space:pre-line;word-break:break-word;color:#000}
+.pv table.rp td.nb{border:none}.pv td.l{text-align:left}.pv td.rot{writing-mode:vertical-rl;transform:rotate(180deg);height:120px;white-space:normal}
+.pv td.big{font-size:20px;font-weight:700}.pv td.sm{font-size:10px;color:#444}.pv td.b{font-weight:700}
+.chk{font-size:.88rem}.chk div{padding:3px 0}.ok{color:var(--ok)}.wn{color:var(--warn)}
+.pg{page-break-after:always;break-after:page}
+@media print{body{background:#fff;padding:0}body>*:not(#sheets){display:none!important}#sheets{display:block!important}.pv{border:none;padding:0;margin:0}.pg{page-break-after:always}@page{size:A4 landscape;margin:10mm}.pv table.rp td{font-size:10px}.pv td.big{font-size:16px}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="fb.js"></script><script src="core.js"></script><script src="mprcore.js"></script></head><body>
+<div id="login"></div>
+<div class="wrap" id="app" hidden>
+ <div class="row" style="justify-content:space-between"><h1>MPR जनरेटर · निवाई</h1><span class="m"><span id="me"></span> <button class="b" id="out">लॉग आउट</button></span></div>
+
+ <section><h2>1. फ़ाइलें और माह</h2>
+  <p class="m">RRCMS की Pending MPR (.xls) और update_disposal.xlsx चुनें। फ़ाइलें आपके ब्राउज़र में ही पढ़ी जाती हैं। GCMS और RRCMS दोनों नंबर अपने-आप जुड़ते हैं।</p>
+  <div class="g"><div><label for="fp">Pending MPR (.xls)</label><input id="fp" type="file" accept=".xls,.html,.htm"></div>
+  <div><label for="fd">निस्तारण फ़ाइल (.xlsx)</label><input id="fd" type="file" accept=".xlsx,.xls"></div>
+  <div><label for="rm">रिपोर्ट का माह</label><input id="rm" type="month"></div>
+  <div><label for="ad">आयु की गणना की तारीख (खाली = माह का अंत)</label><input id="ad" type="date"></div></div>
+ </section>
+
+ <section><h2>2. बकाया (पिछले माह का शेष)</h2>
+  <p class="m" id="ob">…</p>
+  <div class="g"><div><label for="o1">दावे</label><input id="o1" type="number" min="0"></div><div><label for="o2">प्रार्थना पत्र</label><input id="o2" type="number" min="0"></div><div><label for="o3">इजराय</label><input id="o3" type="number" min="0"></div>
+  <div><label for="grp">निस्तारण किस कॉलम में गिनें</label><select id="grp"><option>बहु पक्षीय</option><option>एक पक्षीय</option><option>स्था0</option></select></div>
+  <div><label for="off">भ्रमण वाले अधिकारी का नाम</label><input id="off" type="text"></div></div>
+ </section>
+
+ <section><h2>3. पेशी कैलेंडर के माह और अवकाश</h2>
+  <div class="g"><div><label for="c1">से (माह)</label><input id="c1" type="month"></div><div><label for="c2">तक (माह)</label><input id="c2" type="month"></div></div>
+  <label for="hol" style="margin-top:10px">सरकारी अवकाश (हर लाइन: 2026-11-08 दीपावली). शनि-रवि अपने-आप धूसर होते हैं।</label>
+  <textarea id="hol" style="min-height:110px"></textarea>
+ </section>
+
+ <section><h2>4. हटाए जाने वाले प्रकरण</h2>
+  <p class="m">इन्हें किसी रिपोर्ट में नहीं गिना जाएगा (पोर्टल की सूची से साझा)। हर संख्या नई लाइन में।</p>
+  <textarea id="ex" style="min-height:110px"></textarea>
+ </section>
+
+ <section><h2>5. रिपोर्ट बनाएँ</h2>
+  <div class="row"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="sh" checked> इन फ़ाइलों का विवरण इतिहास में सहेजें (निस्तारित प्रकरणों की संस्थापन तिथि के लिए)</label></div>
+  <div class="row" style="margin-top:10px"><button class="b p" id="gen">MPR और कैलेंडर बनाएँ</button><button class="b" id="xl" disabled>Excel डाउनलोड</button><button class="b" id="pr" disabled>PDF / प्रिंट</button><button class="b" id="sv" disabled>इस माह का शेष अगले माह के बकाया में सहेजें</button></div>
+  <div class="chk" id="chk" style="margin-top:10px"></div>
+ </section>
+ <section><h2>स्थिति</h2><div id="log" aria-live="polite"></div></section>
+ <div id="sheets"></div>
+</div>
+<script>
+const ADMIN='wasimahmedqureshi@gmail.com',CH=150;
+const $=id=>document.getElementById(id);
+const log=t=>{const l=$('log');l.textContent+=t+'\n';l.scrollTop=l.scrollHeight};
+let HIST=new Map(),EX=new Set(),CFG={months:{},holidays:'',officer:''},OUT=null;
+const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
+const idRange=(col,prefix)=>db.collection(col).where(firebase.firestore.FieldPath.documentId(),'>=',prefix+'__').where(firebase.firestore.FieldPath.documentId(),'<',prefix+'__\uf8ff').get();
+async function writeChunks(col,prefix,recs,extra){
+  const old=await idRange(col,prefix);const parts=chunk(recs,CH);const keep=new Set(parts.map((_,i)=>prefix+'__'+i));
+  const b=db.batch();parts.forEach((p,i)=>b.set(db.collection(col).doc(prefix+'__'+i),{...extra,idx:i,recs:p}));
+  old.forEach(d=>{if(!keep.has(d.id))b.delete(d.ref)});await b.commit();return parts.length}
+async function readChunks(col,prefix){const s=await idRange(col,prefix);const a=[];s.forEach(d=>a.push(d.data()));a.sort((x,y)=>x.idx-y.idx);return a.flatMap(x=>x.recs)}
+const SEED_HOL='2026-11-08 दीपावली\n2026-11-09 गोवर्धन पूजा\n2026-11-11 भाईदूज\n2026-11-24 गुरुनानक जयन्ती\n2026-12-25 क्रिसमस\n2027-01-26 गणतंत्र दिवस';
+async function loadAll(){
+  const recs=await readChunks('cs_history','h');HIST=new Map();for(const x of recs)for(const k of new Set([x.n,x.g,x.r]))if(k)HIST.set(k,x);
+  const e=await db.collection('cs_admin').doc('excluded').get();EX=new Set(e.exists?e.data().list:[]);$('ex').value=[...EX].join('\n');
+  const c=await db.collection('cs_admin').doc('mpr').get();
+  if(c.exists)CFG=Object.assign({months:{},holidays:'',officer:''},c.data());
+  else{CFG={months:{'2026-09':{d:574,p:385,e:31},'2026-10':{d:550,p:363,e:29}},holidays:SEED_HOL,officer:'श्रीमति मनस्वी नरेश'};await db.collection('cs_admin').doc('mpr').set(CFG)}
+  $('hol').value=CFG.holidays||'';$('off').value=CFG.officer||'';log('इतिहास में '+Core.uniq(HIST).length+' प्रकरण, '+EX.size+' हटाए जाने वाले प्रकरण।');setOpening()}
+function prevYM(v){const[y,m]=v.split('-').map(Number);return m===1?(y-1)+'-12':y+'-'+MPR.pad(m-1)}
+function nextYM(v){const[y,m]=v.split('-').map(Number);return m===12?(y+1)+'-01':y+'-'+MPR.pad(m+1)}
+function setOpening(){const v=$('rm').value;if(!v){$('ob').textContent='पहले रिपोर्ट का माह चुनें।';return}
+  const p=CFG.months[prevYM(v)];if(p){$('o1').value=p.d;$('o2').value=p.p;$('o3').value=p.e;$('ob').textContent='बकाया '+prevYM(v)+' की सहेजी रिपोर्ट के शेष से लिया गया ('+(p.d+p.p+p.e)+')। चाहें तो बदल सकते हैं।'}
+  else{$('ob').textContent=prevYM(v)+' का शेष सहेजा हुआ नहीं है। कृपया पिछली MPR का शेष यहाँ लिखें।'}}
+function fileDate(f){const m=/(\d{2})-(\d{2})-(\d{4})\.xls/.exec(f.name);return m?{y:+m[3],m:+m[2],iso:`${m[3]}-${m[2]}-${m[1]}`}:null}
+$('fp').onchange=()=>{const f=$('fp').files[0],d=f&&fileDate(f);if(d){if(!$('rm').value)$('rm').value=d.iso.slice(0,7);$('c1').value=d.iso.slice(0,7);$('c2').value=nextYM(d.iso.slice(0,7));setOpening()}};
+$('rm').onchange=setOpening;
+function parseHol(t){const m=new Map();for(const l of t.split('\n')){const x=/^(\d{4}-\d{2}-\d{2})\s*(.*)$/.exec(l.trim());if(x)m.set(x[1],x[2]||'अवकाश')}return m}
+/* ---------- rendering ---------- */
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function gridHTML(g){let h='<table class="rp"><colgroup>'+g.widths.map(w=>`<col style="width:${Math.round(w*7)}px">`).join('')+'</colgroup>';
+  for(const row of g.rows){const hh=row.find(c=>c.h);h+='<tr'+(hh?` style="height:${hh.h+8}px"`:'')+'>';
+    for(const c of row){const cl=[c.nb?'nb':'',c.al==='l'?'l':'',c.rot?'rot':'',c.big?'big':'',c.sm?'sm':'',c.b?'b':''].filter(Boolean).join(' ');
+      h+=`<td class="${cl}"${c.rs?` rowspan="${c.rs}"`:''}${c.cs?` colspan="${c.cs}"`:''} style="${c.fill?'background:#'+c.fill+';':''}${c.color?'color:#'+c.color+';':''}${c.sz?'font-size:'+c.sz+'px;':''}">${esc(c.v)}</td>`}
+    h+='</tr>'}return h+'</table>'}
+function gridSheet(wb,g){const ws=wb.addWorksheet(g.title,{pageSetup:{orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9}});
+  g.widths.forEach((w,i)=>ws.getColumn(i+1).width=w);const occ=new Set(),thin={style:'thin',color:{argb:'FF000000'}};
+  g.rows.forEach((row,ri)=>{let c=1;for(const cell of row){while(occ.has(ri+','+c))c++;const rs=cell.rs||1,cs=cell.cs||1;
+    for(let a=0;a<rs;a++)for(let b=0;b<cs;b++)occ.add((ri+a)+','+(c+b));
+    for(let a=0;a<rs;a++)for(let b=0;b<cs;b++){const x=ws.getCell(ri+1+a,c+b);
+      x.alignment={horizontal:cell.al==='l'?'left':'center',vertical:'middle',wrapText:true,textRotation:cell.rot?90:0};
+      if(!cell.nb)x.border={top:thin,left:thin,bottom:thin,right:thin};
+      if(cell.fill)x.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF'+cell.fill}}}
+    const x=ws.getCell(ri+1,c);x.value=cell.v===''?null:cell.v;x.font={name:'Mangal',bold:!!cell.b||!!cell.big,size:cell.big?16:cell.sz||(cell.sm?9:11),color:cell.color?{argb:'FF'+cell.color}:undefined};
+    if(rs>1||cs>1)ws.mergeCells(ri+1,c,ri+rs,c+cs-1);
+    if(cell.h)ws.getRow(ri+1).height=cell.h;c+=cs}
+    if(row.some(c=>c.rot))ws.getRow(ri+1).height=100});return ws}
+function tableSheet(wb,name,head,rows,widths){const ws=wb.addWorksheet(name);ws.addRow(head).font={bold:true};rows.forEach(r=>ws.addRow(r));widths.forEach((w,i)=>ws.getColumn(i+1).width=w);ws.views=[{state:'frozen',ySplit:1}];return ws}
+/* ---------- generate ---------- */
+$('gen').onclick=async()=>{const fp=$('fp').files[0],fd=$('fd').files[0],rm=$('rm').value;
+  if(!fp||!fd||!rm)return log('Pending फ़ाइल, निस्तारण फ़ाइल और रिपोर्ट का माह चुनें।');
+  $('gen').disabled=true;$('chk').innerHTML='';
+  try{const[y,m]=rm.split('-').map(Number);const ex=new Set($('ex').value.split('\n').map(x=>x.trim()).filter(Boolean));
+    const op={'दावे':+$('o1').value||0,'प्रार्थना पत्र':+$('o2').value||0,'इजराय':+$('o3').value||0};
+    log('फ़ाइलें पढ़ रहे हैं…');const pend=Core.parseList(await fp.text()),disp=Core.parseDisposal(await fd.arrayBuffer());
+    const res=MPR.compute({pend,disp,hist:HIST,ex,y,m,opening:op,group:$('grp').value,ageDate:$('ad').value||''});
+    const hol=parseHol($('hol').value),today=new Date(Date.now()+5.5*36e5).toISOString().slice(0,10),officer=$('off').value;
+    const grids=[MPR.hindi(res,y,m,officer),MPR.english(res,y,m),MPR.yearwise(res,y,m)];
+    let c1=$('c1').value||rm,c2=$('c2').value||c1;const cal=[];let cur=c1;for(let i=0;i<24;i++){const[cy,cm]=cur.split('-').map(Number);cal.push(MPR.calendar(res,cy,cm,hol,today));if(cur>=c2)break;cur=nextYM(cur)}
+    OUT={res,y,m,grids,cal,ex,hol,op,disp};
+    $('sheets').innerHTML=[...grids,...cal].map(g=>'<div class="pv pg">'+gridHTML(g)+'</div>').join('');
+    /* checks */
+    const R=res.R,T=f=>MPR.tot(R,f),ch=[];const add=(ok,t)=>ch.push(`<div class="${ok?'ok':'wn'}">${ok?'✔':'⚠'} ${esc(t)}</div>`);
+    add(true,`बकाया ${T('C')} + दायर ${T('D')} = योग ${T('E')}; निस्तारण ${T('I')}; शेष ${T('L')}`);
+    add(T(r=>r.age.reduce((a,b)=>a+b,0))===T('L'),'आयु-विवरण का जोड़ = शेष');add(grids[2].total===T('L'),'वर्षवार शेष का जोड़ = शेष');
+    MPR.CLS.forEach(c=>{if(R[c].D<0)add(false,`${c}: दायर ऋणात्मक (${R[c].D}) — Pending सूची का शेष पिछले माह के शेष से कम है। बकाया जाँचें।`)});
+    add(res.miss.length===0,res.miss.length?`${res.miss.length} निस्तारित प्रकरणों की संस्थापन तिथि नहीं मिली (आयु में नहीं गिने): `+res.miss.slice(0,8).map(x=>x.n).join(', ')+(res.miss.length>8?'…':''):'सभी निस्तारित प्रकरणों की संस्थापन तिथि मिल गई');
+    add(res.clashed===0,res.clashed?`${res.clashed} प्रकरण Pending और निस्तारण दोनों में थे — निस्तारित माने गए, शेष से बाहर`:'Pending और निस्तारण में कोई टकराव नहीं');
+    add(true,`Pending फ़ाइल में ${pend.length} पंक्तियाँ, हटाए गए ${res.excluded}, शेष में गिने ${res.pending.length}; इस माह के निस्तारण ${res.dis.length}`);
+    const nh=res.pending.filter(x=>!x.hd).length;if(nh)add(false,`${nh} pending प्रकरणों में अगली पेशी तिथि नहीं है`);
+    cal.forEach(g=>g.flagged.forEach(([d,n])=>add(false,`${d} को अवकाश है पर ${n} प्रकरणों की पेशी दर्ज है`)));
+    $('chk').innerHTML=ch.join('');
+    if(HIST&&$('sh').checked){const u=Core.uniq(HIST);log('इतिहास सहेज रहे हैं…');await writeChunks('cs_history','h',u,{});log('इतिहास सहेजा ('+u.length+' प्रकरण)।')}
+    $('xl').disabled=$('pr').disabled=$('sv').disabled=false;log('रिपोर्ट तैयार — नीचे देखें, फिर Excel डाउनलोड या PDF/प्रिंट करें।');
+    $('sheets').scrollIntoView({behavior:'smooth'});
+  }catch(e){log('त्रुटि: '+errText(e));console.error(e)}finally{$('gen').disabled=false}};
+$('pr').onclick=()=>window.print();
+$('xl').onclick=async()=>{if(!OUT)return;const{res,y,m,grids,cal,ex,disp}=OUT;const wb=new ExcelJS.Workbook();
+  grids.forEach(g=>gridSheet(wb,g));cal.forEach(g=>gridSheet(wb,g));
+  const R=res.R;const ns=wb.addWorksheet('Notes');[['MPR '+MPR.EM[m-1]+' '+y+' — जाँच और टिप्पणी'],[''],
+   ['बकाया (पिछला शेष)',...MPR.CLS.map(c=>c+': '+R[c].C)],['दायर = शेष + निस्तारण − बकाया',...MPR.CLS.map(c=>c+': '+R[c].D)],
+   ['आयु की गणना की तारीख',res.age],['Pending पंक्तियाँ / हटाए / गिने',res.keptN+res.excluded+' / '+res.excluded+' / '+res.pending.length],
+   ['निस्तारण-फ़ाइल से टकराव (निस्तारित माने)',res.clashed],['निस्तारित प्रकरण जिनकी संस्थापन तिथि नहीं मिली',res.miss.length],
+   ['वर्गीकरण','धारा 212, 212(02), 39, 39(1), 39(2), 39(2ए), O(39)-R(2ए), O(9)-R(9), 136, 151 = प्रार्थना पत्र; धारा 175 या केस टाइप इजराय = इजराय; शेष = दावे'],
+   ['GCMS (पुराना पोर्टल) और RRCMS (वर्तमान) दोनों नंबर जोड़कर गिने गए हैं।']].forEach(r=>ns.addRow(r));ns.getColumn(1).width=48;ns.getColumn(2).width=40;
+  const dt=x=>x?new Date(x+'T00:00:00Z'):null;
+  tableSheet(wb,'Data-Pending',['GCMS Case No','RRCMS Case No','Report Type','Case Type','Section','Inst. Date','Year','Age Bucket','Next Hearing','Case Purpose','Appellant','Respondent'],
+    res.pending.map(x=>{const i=x.ir||x.ig;return[x.g,x.r,x.k,x.ct,x.sec,dt(i),i?+i.slice(0,4):'',i?['<6M','6-12M','1-2Y','2-3Y','3-5Y','5-10Y','>10Y'][(()=>{const mm=MPR.dm(i,res.age);return mm<6?0:mm<12?1:mm<24?2:mm<36?3:mm<60?4:mm<120?5:6})()]:'',dt(x.hd),x.pur,x.ap,x.rs]}),[20,20,14,14,14,12,8,10,12,22,22,22]);
+  tableSheet(wb,'Data-Disposed (period)',['Case No','Case title','Section','Decision date','Inst. Date','Report Type'],res.dis.map(x=>[x.n,x.title||((x.ap||'')+' बनाम '+(x.rs||'')),x.sec,dt(x.dd),dt(x.ir||x.ig),x.k]),[20,40,14,12,12,14]);
+  tableSheet(wb,'Excluded',['Case No'],[...ex].map(x=>[x]),[24]);
+  wb.worksheets.forEach(w=>{if(/^Data/.test(w.name))w.eachRow(r=>r.eachCell(c=>{if(c.value instanceof Date)c.numFmt='dd/mm/yyyy'}))});
+  const buf=await wb.xlsx.writeBuffer();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  a.download=`MPR_${MPR.EM[m-1]}_${y}.xlsx`;document.body.appendChild(a);a.click();a.remove();log('Excel तैयार: '+a.download)};
+$('sv').onclick=async()=>{if(!OUT)return;const R=OUT.res.R,k=MPR.ym(OUT.y,OUT.m);
+  if(!confirm(k+' का शेष (दावे '+R['दावे'].L+', प्रार्थना पत्र '+R['प्रार्थना पत्र'].L+', इजराय '+R['इजराय'].L+') अगले माह के बकाया के रूप में सहेजें?'))return;
+  CFG.months[k]={d:R['दावे'].L,p:R['प्रार्थना पत्र'].L,e:R['इजराय'].L};CFG.holidays=$('hol').value;CFG.officer=$('off').value;
+  try{await db.collection('cs_admin').doc('mpr').set(CFG);log('सहेजा: '+k+' का शेष '+(R['दावे'].L+R['प्रार्थना पत्र'].L+R['इजराय'].L)+'। अगले माह की रिपोर्ट में यही बकाया आएगा।')}catch(e){log('त्रुटि: '+errText(e))}};
+$('hol').onchange=$('off').onchange=async()=>{CFG.holidays=$('hol').value;CFG.officer=$('off').value;try{await db.collection('cs_admin').doc('mpr').set(CFG,{merge:true})}catch(e){}};
+$('ex').onchange=async()=>{const l=$('ex').value.split('\n').map(x=>x.trim()).filter(Boolean);EX=new Set(l);try{await db.collection('cs_admin').doc('excluded').set({list:l});log('हटाने की सूची सहेजी ('+l.length+')।')}catch(e){log('त्रुटि: '+errText(e))}};
+$('out').onclick=()=>auth.signOut();
+auth.onAuthStateChanged(async u=>{
+  if(!u||u.isAnonymous||(u.email||'').toLowerCase()!==ADMIN||!u.emailVerified){$('app').hidden=true;$('login').hidden=false;mountLogin($('login'),'एडमिन लॉगिन','केवल कार्यालय के एडमिन ईमेल से लॉगिन होगा।');
+    if(u&&!u.isAnonymous){$('login').querySelector('#lmsg').textContent=(u.email||'')+' एडमिन नहीं है।'}return}
+  $('login').hidden=true;$('app').hidden=false;$('me').textContent=u.email;
+  try{await loadAll()}catch(e){log('त्रुटि: '+errText(e))}});
+</script></body></html>

@@ -27,6 +27,13 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--li
 .pv table.rp td{border:1px solid #000;padding:3px 4px;text-align:center;vertical-align:middle;font-size:12px;white-space:pre-line;word-break:break-word;color:#000}
 .pv table.rp td.nb{border:none}.pv td.l{text-align:left}.pv td.rot{writing-mode:vertical-rl;transform:rotate(180deg);height:120px;white-space:normal}
 .pv td.big{font-size:20px;font-weight:700}.pv td.sm{font-size:10px;color:#444}.pv td.b{font-weight:700}
+body{padding-top:0}.top{background:linear-gradient(135deg,#12365f,#1e4f8a);color:#fff;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:18px max(16px,env(safe-area-inset-left,0px)) 20px;border-bottom:3px solid #c9a227}
+.top .in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.top h1{color:#fff;font-size:1.25rem}.top .sub{font-size:.82rem;opacity:.85}.top .b{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
+#app{counter-reset:st;padding-top:16px}#app>section>h2{display:flex;align-items:center;gap:10px;font-size:1.02rem}#app>section>h2::before{counter-increment:st;content:counter(st);flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.82rem;display:inline-flex;align-items:center;justify-content:center}
+section{box-shadow:0 1px 2px rgba(20,30,50,.06)}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:12px 0 4px}.kpi div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}.kpi b{display:block;font-size:1.35rem;line-height:1.2}.kpi span{font-size:.76rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.chips label{display:flex;align-items:center;gap:6px;margin:0;padding:6px 11px;border:1.5px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink);font-size:.86rem;cursor:pointer}.chips label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}.chips input{width:auto;margin:0}
+.bar{display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;background:var(--surface);padding:10px 0 2px;border-top:1px solid var(--line);margin-top:12px}
 .chk{font-size:.88rem}.chk div{padding:3px 0}.ok{color:var(--ok)}.wn{color:var(--warn)}
 .pg{page-break-after:always;break-after:page}
 @media print{body{background:#fff;padding:0}body>*:not(#sheets){display:none!important}#sheets{display:block!important}.pv{border:none;padding:0;margin:0}.pg{page-break-after:always}@page{size:A4 landscape;margin:10mm}.pv table.rp td{font-size:10px}.pv td.big{font-size:16px}}
@@ -39,9 +46,9 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--li
 <script src="fb.js"></script><script src="core.js"></script><script src="mprcore.js"></script></head><body>
 <div id="login"></div>
 <div class="wrap" id="app" hidden>
- <div class="row" style="justify-content:space-between"><h1>MPR जनरेटर · निवाई</h1><span class="m"><span id="me"></span> <button class="b" id="out">लॉग आउट</button></span></div>
+ <div class="top"><div class="in"><div><h1>सहायक कलेक्टर (फ़ास्ट ट्रैक), निवाई</h1><div class="sub">मासिक प्रगति रिपोर्ट (MPR) और पेशी कैलेंडर जनरेटर</div></div><div class="row"><a class="b" href="admin.html" style="text-decoration:none">← एडमिन</a><span class="sub" id="me"></span><button class="b" id="out">लॉग आउट</button></div></div></div>
 
- <section><h2>1. फ़ाइलें और माह</h2>
+ <section><h2>फ़ाइलें और माह</h2>
   <p class="m">RRCMS की Pending MPR (.xls) और update_disposal.xlsx चुनें। फ़ाइलें आपके ब्राउज़र में ही पढ़ी जाती हैं। GCMS और RRCMS दोनों नंबर अपने-आप जुड़ते हैं।</p>
   <div class="g"><div><label for="fp">Pending MPR (.xls)</label><input id="fp" type="file" accept=".xls,.html,.htm"></div>
   <div><label for="fd">निस्तारण फ़ाइल (.xlsx)</label><input id="fd" type="file" accept=".xlsx,.xls"></div>
@@ -49,28 +56,30 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--li
   <div><label for="ad">आयु की गणना की तारीख (खाली = माह का अंत)</label><input id="ad" type="date"></div></div>
  </section>
 
- <section><h2>2. बकाया (पिछले माह का शेष)</h2>
+ <section><h2>बकाया (पिछले माह का शेष)</h2>
   <p class="m" id="ob">…</p>
   <div class="g"><div><label for="o1">दावे</label><input id="o1" type="number" min="0"></div><div><label for="o2">प्रार्थना पत्र</label><input id="o2" type="number" min="0"></div><div><label for="o3">इजराय</label><input id="o3" type="number" min="0"></div>
   <div><label for="grp">निस्तारण किस कॉलम में गिनें</label><select id="grp"><option>बहु पक्षीय</option><option>एक पक्षीय</option><option>स्था0</option></select></div>
   <div><label for="off">भ्रमण वाले अधिकारी का नाम</label><input id="off" type="text"></div></div>
  </section>
 
- <section><h2>3. पेशी कैलेंडर के माह और अवकाश</h2>
-  <div class="g"><div><label for="c1">से (माह)</label><input id="c1" type="month"></div><div><label for="c2">तक (माह)</label><input id="c2" type="month"></div></div>
-  <label for="hol" style="margin-top:10px">सरकारी अवकाश (हर लाइन: 2026-11-08 दीपावली). शनि-रवि अपने-आप धूसर होते हैं।</label>
+ <section><h2>पेशी कैलेंडर और अवकाश</h2>
+  <p class="m">जिन माहों की पेशी कैलेंडर रिपोर्ट चाहिए उन्हें चुनें। माह की सूची Pending फ़ाइल की पेशी तिथियों से बनती है (संख्या = उस माह की पेशी वाली फ़ाइलें)।</p>
+  <div class="chips" id="cm"><span class="m">पहले Pending फ़ाइल चुनें…</span></div>
+  <div class="row"><button class="b" id="call" type="button">सभी माह चुनें</button><button class="b" id="cnone" type="button">कोई नहीं</button></div>
+  <label for="hol" style="margin-top:12px">सरकारी अवकाश (हर लाइन: 2026-11-08 दीपावली). शनि-रवि अपने-आप धूसर होते हैं।</label>
   <textarea id="hol" style="min-height:110px"></textarea>
  </section>
 
- <section><h2>4. हटाए जाने वाले प्रकरण</h2>
+ <section><h2>हटाए जाने वाले प्रकरण</h2>
   <p class="m">इन्हें किसी रिपोर्ट में नहीं गिना जाएगा (पोर्टल की सूची से साझा)। हर संख्या नई लाइन में।</p>
   <textarea id="ex" style="min-height:110px"></textarea>
  </section>
 
- <section><h2>5. रिपोर्ट बनाएँ</h2>
+ <section><h2>रिपोर्ट बनाएँ</h2>
   <div class="row"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="sh" checked> इन फ़ाइलों का विवरण इतिहास में सहेजें (निस्तारित प्रकरणों की संस्थापन तिथि के लिए)</label></div>
-  <div class="row" style="margin-top:10px"><button class="b p" id="gen">MPR और कैलेंडर बनाएँ</button><button class="b" id="xl" disabled>Excel डाउनलोड</button><button class="b" id="pr" disabled>PDF / प्रिंट</button><button class="b" id="sv" disabled>इस माह का शेष अगले माह के बकाया में सहेजें</button></div>
-  <div class="chk" id="chk" style="margin-top:10px"></div>
+  <div class="bar"><button class="b p" id="gen">MPR और कैलेंडर बनाएँ</button><button class="b" id="xl" disabled>Excel डाउनलोड</button><button class="b" id="pr" disabled>PDF / प्रिंट</button><button class="b" id="sv" disabled>इस माह का शेष अगले माह के बकाया में सहेजें</button></div>
+  <div class="kpi" id="kpi" hidden></div><div class="chk" id="chk" style="margin-top:10px"></div>
  </section>
  <section><h2>स्थिति</h2><div id="log" aria-live="polite"></div></section>
  <div id="sheets"></div>
@@ -101,8 +110,19 @@ function setOpening(){const v=$('rm').value;if(!v){$('ob').textContent='पह�
   const p=CFG.months[prevYM(v)];if(p){$('o1').value=p.d;$('o2').value=p.p;$('o3').value=p.e;$('ob').textContent='बकाया '+prevYM(v)+' की सहेजी रिपोर्ट के शेष से लिया गया ('+(p.d+p.p+p.e)+')। चाहें तो बदल सकते हैं।'}
   else{$('ob').textContent=prevYM(v)+' का शेष सहेजा हुआ नहीं है। कृपया पिछली MPR का शेष यहाँ लिखें।'}}
 function fileDate(f){const m=/(\d{2})-(\d{2})-(\d{4})\.xls/.exec(f.name);return m?{y:+m[3],m:+m[2],iso:`${m[3]}-${m[2]}-${m[1]}`}:null}
-$('fp').onchange=()=>{const f=$('fp').files[0],d=f&&fileDate(f);if(d){if(!$('rm').value)$('rm').value=d.iso.slice(0,7);$('c1').value=d.iso.slice(0,7);$('c2').value=nextYM(d.iso.slice(0,7));setOpening()}};
-$('rm').onchange=setOpening;
+let PREAD=null;
+async function buildChips(){const f=$('fp').files[0],rm=$('rm').value;if(!f||!rm)return;
+  try{if(!PREAD||PREAD.f!==f){PREAD={f,rows:Core.parseList(await f.text())}}}catch(e){log('त्रुटि: '+errText(e));return}
+  const cnt={};for(const x of PREAD.rows)if(x.hd){const k=x.hd.slice(0,7);cnt[k]=(cnt[k]||0)+1}
+  const keys=Object.keys(cnt).filter(k=>k>=rm&&k<'2100').sort();const all=[];let cur=rm;const last=keys.length?keys[keys.length-1]:rm;
+  for(let i=0;i<36;i++){all.push(cur);if(cur>=last)break;cur=nextYM(cur)}
+  const keep=new Set([...document.querySelectorAll('#cm input:checked')].map(i=>i.value));const first=!document.querySelector('#cm input');
+  $('cm').innerHTML=all.filter(k=>cnt[k]||k===rm||k===nextYM(rm)).map(k=>{const[y,m]=k.split('-').map(Number);const on=first?(k===rm||k===nextYM(rm)):keep.has(k);
+    return `<label><input type="checkbox" value="${k}"${on?' checked':''}> ${MPR.EM[m-1]} ${y} <span class="m">· ${cnt[k]||0}</span></label>`}).join('')}
+$('call').onclick=()=>document.querySelectorAll('#cm input').forEach(i=>i.checked=true);
+$('cnone').onclick=()=>document.querySelectorAll('#cm input').forEach(i=>i.checked=false);
+$('fp').onchange=async()=>{const f=$('fp').files[0],d=f&&fileDate(f);if(d&&!$('rm').value)$('rm').value=d.iso.slice(0,7);setOpening();await buildChips()};
+$('rm').onchange=()=>{setOpening();buildChips()};
 function parseHol(t){const m=new Map();for(const l of t.split('\n')){const x=/^(\d{4}-\d{2}-\d{2})\s*(.*)$/.exec(l.trim());if(x)m.set(x[1],x[2]||'अवकाश')}return m}
 /* ---------- rendering ---------- */
 const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -127,14 +147,14 @@ function tableSheet(wb,name,head,rows,widths){const ws=wb.addWorksheet(name);ws.
 /* ---------- generate ---------- */
 $('gen').onclick=async()=>{const fp=$('fp').files[0],fd=$('fd').files[0],rm=$('rm').value;
   if(!fp||!fd||!rm)return log('Pending फ़ाइल, निस्तारण फ़ाइल और रिपोर्ट का माह चुनें।');
-  $('gen').disabled=true;$('chk').innerHTML='';
+  $('gen').disabled=true;$('chk').innerHTML='';$('kpi').hidden=true;
   try{const[y,m]=rm.split('-').map(Number);const ex=new Set($('ex').value.split('\n').map(x=>x.trim()).filter(Boolean));
     const op={'दावे':+$('o1').value||0,'प्रार्थना पत्र':+$('o2').value||0,'इजराय':+$('o3').value||0};
-    log('फ़ाइलें पढ़ रहे हैं…');const pend=Core.parseList(await fp.text()),disp=Core.parseDisposal(await fd.arrayBuffer());
+    log('फ़ाइलें पढ़ रहे हैं…');const pend=(PREAD&&PREAD.f===fp)?PREAD.rows:Core.parseList(await fp.text()),disp=Core.parseDisposal(await fd.arrayBuffer());
     const res=MPR.compute({pend,disp,hist:HIST,ex,y,m,opening:op,group:$('grp').value,ageDate:$('ad').value||''});
     const hol=parseHol($('hol').value),today=new Date(Date.now()+5.5*36e5).toISOString().slice(0,10),officer=$('off').value;
     const grids=[MPR.hindi(res,y,m,officer),MPR.english(res,y,m),MPR.yearwise(res,y,m)];
-    let c1=$('c1').value||rm,c2=$('c2').value||c1;const cal=[];let cur=c1;for(let i=0;i<24;i++){const[cy,cm]=cur.split('-').map(Number);cal.push(MPR.calendar(res,cy,cm,hol,today));if(cur>=c2)break;cur=nextYM(cur)}
+    const sel=[...document.querySelectorAll('#cm input:checked')].map(i=>i.value).sort();if(!sel.length)sel.push(rm);const cal=sel.map(k=>{const[cy,cm]=k.split('-').map(Number);return MPR.calendar(res,cy,cm,hol,today)});
     OUT={res,y,m,grids,cal,ex,hol,op,disp};
     $('sheets').innerHTML=[...grids,...cal].map(g=>'<div class="pv pg">'+gridHTML(g)+'</div>').join('');
     /* checks */
@@ -147,7 +167,7 @@ $('gen').onclick=async()=>{const fp=$('fp').files[0],fd=$('fd').files[0],rm=$('r
     add(true,`Pending फ़ाइल में ${pend.length} पंक्तियाँ, हटाए गए ${res.excluded}, शेष में गिने ${res.pending.length}; इस माह के निस्तारण ${res.dis.length}`);
     const nh=res.pending.filter(x=>!x.hd).length;if(nh)add(false,`${nh} pending प्रकरणों में अगली पेशी तिथि नहीं है`);
     cal.forEach(g=>g.flagged.forEach(([d,n])=>add(false,`${d} को अवकाश है पर ${n} प्रकरणों की पेशी दर्ज है`)));
-    $('chk').innerHTML=ch.join('');
+    $('chk').innerHTML=ch.join('');$('kpi').hidden=false;$('kpi').innerHTML=[['बकाया',T('C')],['दायर',T('D')],['निस्तारण',T('I')],['शेष',T('L')],['5 वर्ष से पुराने (शेष)',T(r=>r.age[5]+r.age[6])]].map(([a,b])=>`<div><b>${b}</b><span>${a}</span></div>`).join('');
     if(HIST&&$('sh').checked){const u=Core.uniq(HIST);log('इतिहास सहेज रहे हैं…');await writeChunks('cs_history','h',u,{});log('इतिहास सहेजा ('+u.length+' प्रकरण)।')}
     $('xl').disabled=$('pr').disabled=$('sv').disabled=false;log('रिपोर्ट तैयार — नीचे देखें, फिर Excel डाउनलोड या PDF/प्रिंट करें।');
     $('sheets').scrollIntoView({behavior:'smooth'});
